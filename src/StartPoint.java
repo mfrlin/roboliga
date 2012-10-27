@@ -6,7 +6,7 @@ import lejos.nxt.SensorPort;
 public class StartPoint {
 
 	public static void main(String[] args) {
-		int robotPower = 60;
+		int robotPower = 30;
 		Robot gluh = new Robot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S2, robotPower);
 		LCD.drawString("Ready.", 0, 0);
 		Button.waitForAnyPress();
