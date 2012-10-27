@@ -1,8 +1,11 @@
+import lejos.nxt.Button;
 import lejos.nxt.LCD;
+import lejos.nxt.Motor;
 import lejos.nxt.NXTMotor;
 import lejos.nxt.MotorPort;
 import lejos.nxt.LightSensor;
 import lejos.nxt.SensorPort;
+import lejos.util.Delay;
 
 public class Robot {
 	private NXTMotor leftMotor;
@@ -10,16 +13,23 @@ public class Robot {
 	private LightSensor leftSensor;
 	private LightSensor rightSensor;
 	private int maxPower;
+	private PID myPID;
 	
 	public Robot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort);
 		leftSensor = new LightSensor(leftSensorPort);
 		rightSensor = new LightSensor(rightSensorPort);
+		setMaxPower(maxPower);
+		setupPID();
 	}
 	
 	public void setMaxPower(int power) {
 		maxPower = power;
+	}
+	
+	public void setupPID(){
+		myPID = new PID(3, 0.05, 0.25, 0, 2 * maxPower);
 	}
 	
 	public void steer(int difference) {
@@ -30,7 +40,6 @@ public class Robot {
 		else { // turn left
 			leftMotor.setPower(maxPower + difference);
 			rightMotor.setPower(maxPower);
-			
 		}
 		LCD.drawInt(difference, 0, 5);
 		LCD.drawInt(leftMotor.getPower(), 0, 6);
@@ -42,11 +51,19 @@ public class Robot {
 		int rightReading = rightSensor.getLightValue();
 		LCD.drawInt(leftReading, 5, 0, 3);
 		LCD.drawInt(rightReading, 5, 0, 4);
-		if (leftReading < rightReading) { // we must turn left
-			return leftReading - rightReading;
-		}
-		else { // we must turn right
-			return rightReading - leftReading;
+		return rightReading - leftReading;
+	}
+
+	public void followLine() {
+		while(true) {
+			int read = getSensorReadings();
+			LCD.drawInt(read, 5, 0, 1);
+			int steer = Math.abs(read); // (int)myPID.compute(Math.abs(read), 0);
+			LCD.drawInt(steer, 5, 0, 2);
+			int direction = Math.round(Math.signum(read));
+			steer(steer *= direction);
+			
+			Delay.msDelay(100);
 		}
 	}
 
