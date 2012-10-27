@@ -12,7 +12,6 @@ public class PID {
 	public PID(double kp, double ki, double kd, double outMin, double outMax) {
 		setTunings(kp, ki, kd);
 		setOutputLimits(outMin, outMax);
-		
 	}
 	
 	
