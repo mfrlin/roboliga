@@ -5,7 +5,10 @@
 *.nxj
 *.nxd
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d0f41f8a79872f427d8be802b9a4982279b48852
 #################
 ## Eclipse
 #################
@@ -24,8 +27,11 @@ local.properties
 .settings/
 .loadpath
 
+<<<<<<< HEAD
 bin/*.class
 
+=======
+>>>>>>> d0f41f8a79872f427d8be802b9a4982279b48852
 # External tool builders
 .externalToolBuilders/
 
