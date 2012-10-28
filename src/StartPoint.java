@@ -6,18 +6,17 @@ import lejos.nxt.SensorPort;
 public class StartPoint {
 
 	public static void main(String[] args) {
-		int robotPower = 60;
+		int robotPower = 20;
 		Robot gluh = new Robot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S2, robotPower);
-		PID myPID = new PID(3, 0.05, 0.25, 0, 2*robotPower);
+		PID myPID = new PID(2, 0.0, 0.0);
 		LCD.drawString("Ready.", 0, 0);
 		Button.waitForAnyPress();
 		while (true) {
 			int read = gluh.getSensorReadings();
 			LCD.drawInt(read, 5, 0, 1);
-			int steer = (int)myPID.compute(Math.abs(read), 0);
-			LCD.drawInt(steer, 5, 0, 2);
-			if (read < 0) gluh.steer(-steer);
-			else gluh.steer(steer);
+			int steering = (int)myPID.compute(read, 0);
+			LCD.drawInt(steering, 5, 0, 2);
+			gluh.steer(steering);
 			
 		}
 	}

@@ -16,38 +16,28 @@ public class Robot {
 		rightMotor = new NXTMotor(rightMotorPort);
 		leftSensor = new LightSensor(leftSensorPort);
 		rightSensor = new LightSensor(rightSensorPort);
+		setMaxPower(maxPower);
 	}
 	
 	public void setMaxPower(int power) {
 		maxPower = power;
 	}
 	
-	public void steer(int difference) {
-		if (difference >= 0) { // turn right or go straight
+	public void steer(int difference) {		
+		if (difference <= 0) { // turn right or go straight
 			leftMotor.setPower(maxPower);
 			rightMotor.setPower(maxPower - difference);
 		}
 		else { // turn left
 			leftMotor.setPower(maxPower + difference);
-			rightMotor.setPower(maxPower);
-			
+			rightMotor.setPower(maxPower);	
 		}
-		LCD.drawInt(difference, 0, 5);
-		LCD.drawInt(leftMotor.getPower(), 0, 6);
-		LCD.drawInt(rightMotor.getPower(), 0, 7);
 	}
 	
 	public int getSensorReadings() {
 		int leftReading = leftSensor.getLightValue();
 		int rightReading = rightSensor.getLightValue();
-		LCD.drawInt(leftReading, 5, 0, 3);
-		LCD.drawInt(rightReading, 5, 0, 4);
-		if (leftReading < rightReading) { // we must turn left
-			return leftReading - rightReading;
-		}
-		else { // we must turn right
-			return rightReading - leftReading;
-		}
+		return leftReading - rightReading;
 	}
 
 }
