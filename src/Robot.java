@@ -14,6 +14,9 @@ public class Robot {
 	private LightSensor rightSensor;
 	private int maxPower;
 	private PID myPID;
+	private int historyArrayLength = 100;
+	int[] steerHistory = new int[100];
+	
 	
 	public Robot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
@@ -30,7 +33,7 @@ public class Robot {
 	
 
 	public void setupPID(){
-		myPID = new PID(2, 0.0, 0.0);
+		myPID = new PID(3, 0.1, 1, -maxPower * 1.1, maxPower * 1.1);
 	}
 	
 	public void steer(int difference) {
@@ -56,13 +59,15 @@ public class Robot {
 	}
 
 	public void followLine() {
+		int steerHistoryCount = 0;
 		while(true) {
 			int read = getSensorReadings() * 2;
 			LCD.drawInt(read, 5, 0, 1);
-			int steer =  Math.abs(read); // (int)myPID.compute(read, 0);
+			int steer =  (int)myPID.compute(read, 0);
 			LCD.drawInt(steer, 5, 0, 2);
 			int direction = Math.round(Math.signum(read));
-			steer(steer *= -direction);
+			steerHistory[steerHistoryCount % historyArrayLength] = steer;
+			steer(steer);
 		}
 	}
 

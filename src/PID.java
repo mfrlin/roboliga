@@ -1,38 +1,44 @@
-import lejos.nxt.LCD;
+
 
 public class PID {
 
 	private long lastTime;
+	private double ITerm, lastInput;
 	private double lastOutput;
-	private double errSum, lastErr;
 	private double kp, ki, kd;
-	private int sampleTime = 20; // milliseconds
+	private int sampleTime = 5; // milliseconds
+	private double outMin, outMax;
 
-	public PID(double kp, double ki, double kd) {
+	public PID(double kp, double ki, double kd, double outMin, double outMax) {
 		setTunings(kp, ki, kd);
+		setOutputLimits(outMin, outMax);
 
 	}
 
+
 	public double compute(double input, double setpoint) {
 		long now = System.currentTimeMillis();
-		LCD.drawInt((int)input, 5, 0, 7);
 		long timeChange = now - lastTime;
 		if (timeChange >= sampleTime) {
 			/*Compute all the working error variables*/
 			double error = setpoint - input;
-			errSum += error;
-			double dErr = (error - lastErr);
+			ITerm += (ki * error);
+			if (ITerm > outMax) ITerm = outMax;
+			else if (ITerm < outMin) ITerm = outMin;
+			double dInput = (input - lastInput);
 
 			/*Compute PID Output*/
-			double output = kp * error + ki * errSum + kd * dErr;
-
+			double output = kp * error + ITerm - kd * dInput;
+			if (output > outMax) output = outMax;
+			else if (output < outMin) output = outMin;
 			/*Remember some variables for next time*/
-			lastErr = error;
+			lastInput = input;
 			lastTime = now;
 			lastOutput = output;
 			return output;
 
 		}
+
 		return lastOutput;
 	}
 
@@ -50,6 +56,18 @@ public class PID {
 			kd /= ratio;
 			sampleTime = newSampleTime;
 	   }
+	}
+
+	public void setOutputLimits(double min, double max) {
+		if (min > max) return; // TODO: We should probably raise exception here
+		outMin = min;
+		outMax = max;
+
+		if (lastOutput > outMax) lastOutput = outMax;
+		else if (lastOutput < outMin) lastOutput = outMin;
+
+		if (ITerm > outMax) ITerm = outMax;
+		else if (ITerm < outMin) ITerm = outMin;
 	}
 
 }
