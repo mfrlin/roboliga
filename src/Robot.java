@@ -41,9 +41,9 @@ public class Robot {
 			leftMotor.setPower(maxPower + difference);
 			rightMotor.setPower(maxPower);
 		}
-		LCD.drawInt(difference, 0, 5);
-		LCD.drawInt(leftMotor.getPower(), 0, 6);
-		LCD.drawInt(rightMotor.getPower(), 0, 7);
+		LCD.drawInt(difference, 5, 0, 5);
+		LCD.drawInt(leftMotor.getPower(),5, 0, 6);
+		LCD.drawInt(rightMotor.getPower(),5, 0, 7);
 	}
 	
 	public int getSensorReadings() {
@@ -56,14 +56,12 @@ public class Robot {
 
 	public void followLine() {
 		while(true) {
-			int read = getSensorReadings();
+			int read = getSensorReadings() * 2;
 			LCD.drawInt(read, 5, 0, 1);
-			int steer = Math.abs(read); // (int)myPID.compute(Math.abs(read), 0);
+			int steer =  (int)myPID.compute(read, 0);
 			LCD.drawInt(steer, 5, 0, 2);
 			int direction = Math.round(Math.signum(read));
-			steer(steer *= direction);
-			
-			Delay.msDelay(100);
+			steer(steer *= -1);
 		}
 	}
 
