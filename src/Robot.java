@@ -28,8 +28,9 @@ public class Robot {
 		maxPower = power;
 	}
 	
+
 	public void setupPID(){
-		myPID = new PID(3, 0.05, 0.25, 0, 2 * maxPower);
+		myPID = new PID(2, 0.0, 0.0);
 	}
 	
 	public void steer(int difference) {
@@ -58,10 +59,10 @@ public class Robot {
 		while(true) {
 			int read = getSensorReadings() * 2;
 			LCD.drawInt(read, 5, 0, 1);
-			int steer =  (int)myPID.compute(read, 0);
+			int steer =  Math.abs(read); // (int)myPID.compute(read, 0);
 			LCD.drawInt(steer, 5, 0, 2);
 			int direction = Math.round(Math.signum(read));
-			steer(steer *= -1);
+			steer(steer *= -direction);
 		}
 	}
 
