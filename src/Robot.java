@@ -33,7 +33,7 @@ public class Robot {
 	
 
 	public void setupPID(){
-		myPID = new PID(3, 0.1, 1, -maxPower * 1.1, maxPower * 1.1);
+		myPID = new PID(3, 0.03, 0.03, -maxPower, maxPower);
 	}
 	
 	public void steer(int difference) {
@@ -45,16 +45,16 @@ public class Robot {
 			leftMotor.setPower(maxPower + difference);
 			rightMotor.setPower(maxPower);
 		}
-		LCD.drawInt(difference, 5, 0, 5);
-		LCD.drawInt(leftMotor.getPower(),5, 0, 6);
-		LCD.drawInt(rightMotor.getPower(),5, 0, 7);
+		//LCD.drawInt(difference, 5, 0, 5);
+		//LCD.drawInt(leftMotor.getPower(),5, 0, 6);
+		//LCD.drawInt(rightMotor.getPower(),5, 0, 7);
 	}
 	
 	public int getSensorReadings() {
 		int leftReading = leftSensor.getLightValue();
 		int rightReading = rightSensor.getLightValue();
-		LCD.drawInt(leftReading, 5, 0, 3);
-		LCD.drawInt(rightReading, 5, 0, 4);
+		//LCD.drawInt(leftReading, 5, 0, 3);
+		//LCD.drawInt(rightReading, 5, 0, 4);
 		return rightReading - leftReading;
 	}
 
@@ -62,10 +62,11 @@ public class Robot {
 		int steerHistoryCount = 0;
 		while(true) {
 			int read = getSensorReadings() * 2;
+			//int read = (int) (Math.random()*40-20);
 			LCD.drawInt(read, 5, 0, 1);
 			int steer =  (int)myPID.compute(read, 0);
 			LCD.drawInt(steer, 5, 0, 2);
-			int direction = Math.round(Math.signum(read));
+			//int direction = Math.round(Math.signum(read));
 			steerHistory[steerHistoryCount % historyArrayLength] = steer;
 			steer(steer);
 		}

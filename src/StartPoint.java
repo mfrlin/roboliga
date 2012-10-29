@@ -7,7 +7,7 @@ public class StartPoint {
 
 	public static void main(String[] args) {
 		int robotPower = 95;
-		Robot gluh = new Robot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S2, robotPower);
+		Robot gluh = new Robot(MotorPort.A, MotorPort.B, SensorPort.S2, SensorPort.S3, robotPower);
 		LCD.drawString("Ready.", 0, 0);
 		//Button.waitForAnyPress();
 		gluh.followLine();
