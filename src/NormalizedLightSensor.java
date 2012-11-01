@@ -42,8 +42,6 @@ public class NormalizedLightSensor extends LightSensor {
 	/*
 	* @params:
 	* 	LightSensor sensor: ime svetlobnega senzorja
-	*		int maxValue: maksimalna mejna vrednost na katero 
-	*			normalizira vhodne podatke (priporoceno: max moc motorja)
 	*/
 	public NormalizedLightSensor(SensorPort sensorPort){
 		super(sensorPort);
@@ -52,8 +50,6 @@ public class NormalizedLightSensor extends LightSensor {
 	/*
 	* @params:
 	* 	LightSensor sensor: ime svetlobnega senzorja
-	*		int maxValue: maksimalna mejna vrednost na katero 
-	*			normalizira vhodne podatke (priporoceno: max moc motorja)
 	* 	boolean normalize: ce je normalize=false, potem ne bo normaliziral vrednosti,
 	* 		in bo vrnil kar raw prebrane podatke iz senzorja.
 	*/
