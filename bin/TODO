@@ -1,8 +1,8 @@
+RoboLiga - Lazers, pew pew
 
+Ideje:
+    ❍ normalizirati signale
+    ❍ upocasni v ovinku -> shranjuj podatke in ce abs(sum) > alpha zmanjsaj hitrost
 
-Ideje
-- normalizirati signale
-- upocasni v ovinku -> shranjuj podatke in ce abs(sum) > alpha zmanjsaj hitrost
-
-Crazy ideas
-- music playing while running
+Crazy ideas:
+    ❍ music playing while running

@@ -1,17 +1,13 @@
-import lejos.nxt.Button;
 import lejos.nxt.LCD;
-import lejos.nxt.Motor;
 import lejos.nxt.NXTMotor;
 import lejos.nxt.MotorPort;
-import lejos.nxt.LightSensor;
 import lejos.nxt.SensorPort;
-import lejos.util.Delay;
 
 public class Robot {
 	private NXTMotor leftMotor;
 	private NXTMotor rightMotor;
-	private LightSensor leftSensor;
-	private LightSensor rightSensor;
+	private NormalizedLightSensor leftSensor;
+	private NormalizedLightSensor rightSensor;
 	private int maxPower;
 	private PID myPID;
 	private int historyArrayLength = 100;
@@ -21,8 +17,8 @@ public class Robot {
 	public Robot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort);
-		leftSensor = new LightSensor(leftSensorPort);
-		rightSensor = new LightSensor(rightSensorPort);
+		leftSensor = new NormalizedLightSensor(leftSensorPort);
+		rightSensor = new NormalizedLightSensor(rightSensorPort);
 		setMaxPower(maxPower);
 		setupPID();
 	}
@@ -51,8 +47,8 @@ public class Robot {
 	}
 	
 	public int getSensorReadings() {
-		int leftReading = leftSensor.getLightValue();
-		int rightReading = rightSensor.getLightValue();
+		int leftReading = leftSensor.getComparableValue();
+		int rightReading = rightSensor.getComparableValue();
 		//LCD.drawInt(leftReading, 5, 0, 3);
 		//LCD.drawInt(rightReading, 5, 0, 4);
 		return rightReading - leftReading;
@@ -61,7 +57,7 @@ public class Robot {
 	public void followLine() {
 		int steerHistoryCount = 0;
 		while(true) {
-			int read = getSensorReadings() * 2;
+			int read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
 			//int read = (int) (Math.random()*40-20);
 			LCD.drawInt(read, 5, 0, 1);
 			int steer =  (int)myPID.compute(read, 0);
@@ -71,5 +67,4 @@ public class Robot {
 			steer(steer);
 		}
 	}
-
 }
