@@ -1,6 +1,6 @@
 /*
 NormalizedLightSensor je podrazred LightSensor, ki implementira tudi dinamicno normaliziranje 
-meritev.
+meritev - vrne vrednost med 0 in 100.
 Kaj pomeni dinamicno? Ni treba predhodno izmeriti maximalni in minimalne signale (crno barvo
 traku in belo podlage), vendar sam prilagaja interval na katerega normalizira na merive.
 
@@ -8,15 +8,10 @@ Uporaba:
 
 	=========================
 	Z normalizacijo: 
-		Ce se uporablja samo en svetlobni senzor:
-			sensor = new NormalizedLightSensor(SensorPort.S1);
-			int reading = sensor.getValue();
-		Ce se uporablja vec kot en senzor, in bo treba meritve kombinirati (na primer, racunati
-		razliko meritev dveh senzorjev)
 			sensor1 = new NormalizedLightSensor(SensorPort.S1);
 			sensor2 = new NormalizedLightSensor(SensorPort.S2);
-			int reading1 = sensor1.getComparableValue();
-			int reading2 = sensor2.getComparableValue();
+			int reading1 = sensor1.getValue();
+			int reading2 = sensor2.getValue();
 
 			Nato lahko primerjamo meritve:
 			int difference = reading2 - reading1;
@@ -63,7 +58,7 @@ public class NormalizedLightSensor extends LightSensor {
 	* @params: none
 	*	@returns: normalizirano (ali ne) vrednost, ki jo prebere iz senzorjev
 	*/
-	public int getValue() {
+	private int getLocallyNormalizedValue() {
 		int rawValue = this.getLightValue();
 
 		if (normalize == false) {
@@ -80,8 +75,8 @@ public class NormalizedLightSensor extends LightSensor {
 	* @returns:
 	* 	int value: normalizirana in primerljiva vrednost z drugimi svetlobniki senzorji.
 	*/
-	public int getComparableValue() {
-		int locallyNormalizedValue = getValue();
+	public int getValue() {
+		int locallyNormalizedValue = getLocallyNormalizedValue();
 		return (int)((100.0 * locallyNormalizedValue) / (boundingMax - boundingMin));
 	}
 
