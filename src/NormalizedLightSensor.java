@@ -21,7 +21,7 @@ Uporaba:
 			int difference = reading2 - reading1;
 	========================
 	S staticno normalizacijo
-		sensor1 = new NormalizedLightSensor(SensorPort.S1, 20, 60); /* port, min, max */
+		sensor1 = new NormalizedLightSensor(SensorPort.S1, 20, 60);  // port, min, max 
 		sensor2 = new NormalizedLightSensor(SensorPort.S2, 20, 60);
 		int reading1 = sensor1.getValue();
 		int reading2 = sensor2.getValue();
@@ -50,6 +50,7 @@ public class NormalizedLightSensor extends LightSensor {
 	private int activateAfterCount = 10; /* Stevilo meritev preden zacne normalizirati */
 
 	/*
+	* Uporabljen za dinamicno normalizacijo
 	* @params:
 	* 	SensorPort sensorPort: port svetlobnega senzorja
 	*/
@@ -58,6 +59,7 @@ public class NormalizedLightSensor extends LightSensor {
 	}
 
 	/*
+	* Uporabljen, ce ne zelimo normalizacije
 	* @params:
 	* 	SensorPort sensorPort: port svetlobnega senzorja
 	* 	boolean normalize: ce je normalize=false, potem ne bo normaliziral vrednosti,
