@@ -1,13 +1,17 @@
 /*
-NormalizedLightSensor je podrazred LightSensor, ki implementira tudi dinamicno normaliziranje 
+NormalizedLightSensor je podrazred LightSensor, ki implementira tudi dinamicno in staticno normaliziranje 
 meritev - vrne vrednost med 0 in 100.
 Kaj pomeni dinamicno? Ni treba predhodno izmeriti maximalni in minimalne signale (crno barvo
 traku in belo podlage), vendar sam prilagaja interval na katerega normalizira na merive.
+Kaj pomeni staticno? Vnaprej se dolocimo meje, ki predstavljajo crno in belo barvo. Meja se ne spreminja
+
+Vsak senzor ima svojo mejo. Tako lahko dosezemo dobro delovanju, tudi ce kateri senzor vraca precej
+razlicne vrednosti.
 
 Uporaba:
 
 	=========================
-	Z normalizacijo: 
+	Z dinamicno normalizacijo: 
 			sensor1 = new NormalizedLightSensor(SensorPort.S1);
 			sensor2 = new NormalizedLightSensor(SensorPort.S2);
 			int reading1 = sensor1.getValue();
@@ -15,6 +19,15 @@ Uporaba:
 
 			Nato lahko primerjamo meritve:
 			int difference = reading2 - reading1;
+	========================
+	S staticno normalizacijo
+		sensor1 = new NormalizedLightSensor(SensorPort.S1, 20, 60); /* port, min, max */
+		sensor2 = new NormalizedLightSensor(SensorPort.S2, 20, 60);
+		int reading1 = sensor1.getValue();
+		int reading2 = sensor2.getValue();
+
+		Nato lahko primerjamo meritve:
+		int difference = reading2 - reading1;
 
 	========================
 	Brez normalizacije:
@@ -29,6 +42,8 @@ import lejos.nxt.SensorPort;
 public class NormalizedLightSensor extends LightSensor {
 
 	private boolean normalize = true;
+	private boolean normalizeToFixedBoundaries = false; /* Ce vnaprej nastavimo meje za min in max senzor value */
+	
 	private int boundingMax = 50;  /* Maksimalna normalizirana vrednost meritev */
 	private int boundingMin = 50; /* Minimalna normalizirana vrednost meritev */
 
@@ -36,7 +51,7 @@ public class NormalizedLightSensor extends LightSensor {
 
 	/*
 	* @params:
-	* 	LightSensor sensor: ime svetlobnega senzorja
+	* 	SensorPort sensorPort: port svetlobnega senzorja
 	*/
 	public NormalizedLightSensor(SensorPort sensorPort){
 		super(sensorPort);
@@ -44,7 +59,7 @@ public class NormalizedLightSensor extends LightSensor {
 
 	/*
 	* @params:
-	* 	LightSensor sensor: ime svetlobnega senzorja
+	* 	SensorPort sensorPort: port svetlobnega senzorja
 	* 	boolean normalize: ce je normalize=false, potem ne bo normaliziral vrednosti,
 	* 		in bo vrnil kar raw prebrane podatke iz senzorja.
 	*/
@@ -54,34 +69,63 @@ public class NormalizedLightSensor extends LightSensor {
 	}
 
 	/*
-	* Podobno kot LightSensor.getLightValue(), le da po potrebi normalizira podatke
-	* @params: none
-	*	@returns: normalizirano (ali ne) vrednost, ki jo prebere iz senzorjev
+	* Konstruktor, ki se uporablja ce zelimo normalizirati na predefiniran interval, torej 
+	* ce poznamo meritev senzorja na beli in crni podlagi.
+	* @params:
+	* 	SensorPort sensorPort: port svetlobnega senzorja
+	* 	int boundingMin: spodnja meja za normalizacijo (meritev bele barve)
+	* 	int boundingMax: zgornja meja za normalizacijo (meritev crne barve)
 	*/
-	private int getLocallyNormalizedValue() {
-		int rawValue = this.getLightValue();
-
-		if (normalize == false) {
-			return rawValue;
-		} else {
-			int normalizedValue = normalizeValue(rawValue);
-			return normalizedValue;
-		}
+	public NormalizedLightSensor(SensorPort sensorPort, int boundingMin, int boundingMax){
+		super(sensorPort);
+		this.normalizeToFixedBoundaries = true;
+		this.boundingMin = boundingMin;
+		this.boundingMax = boundingMax;
 	}
 
 	/* 
 	* Vrne verndost, ki je normalizirana (lokalno), a primerljiva z metrivam drugega senzorja.
-	* Normlizira normalizirano vrednost na interval [0..100]
+	* Normlizira normalizirano vrednost na interval, ki je lahko dinamicen ali staticen 
+	* (odvisno od  uporabljenega konstruktorja)
 	* @returns:
 	* 	int value: normalizirana in primerljiva vrednost z drugimi svetlobniki senzorji.
 	*/
 	public int getValue() {
-		int locallyNormalizedValue = getLocallyNormalizedValue();
-		return (int)((100.0 * locallyNormalizedValue) / (boundingMax - boundingMin));
+
+		int rawValue = this.getLightValue();
+
+		if (normalize == false) {
+			return rawValue;
+		} else if (normalizeToFixedBoundaries == true) {
+			return normalizeValueToStaticBounds(rawValue);
+		} else {
+			return normalizeValueToDynamicBounds(rawValue);
+		}
 	}
 
 	/*
-	* Algoritem za normaliziranje prebranih vrednosti iz senzorja
+	* Algoritem za staticno normaliziranje prebranih vrednosti iz senzorja,
+	* ce smo vnaprej nastavili boundingMin in boundingMax na minimalno in maksimalno
+	* vrednost, ki jo bere senzor na danih svetlobnih pogojih
+	*
+	* @params:
+	* 	int rawValue: prebrana vrednost iz senzorja
+	* @returns
+	* 	int value: normalizirano vrednost na intrevalu [0..100]
+	*/
+	private int normalizeValueToStaticBounds(int rawValue) {
+
+		if (rawValue <= boundingMin) {
+			return boundingMin;
+		} else if (rawValue >= boundingMax) {
+			return boundingMax;
+		} else {
+			return (int)(100.0 * ( rawValue - boundingMin ) / ( boundingMax - boundingMin ));
+ 		}
+	}
+
+	/*
+	* Algoritem za dinamicno normaliziranje prebranih vrednosti iz senzorja
 	* Opis algoritma:
 	* 	Vhodne podatke skalira na interval [boundingMin, boundingMax]
 	* Algoritem se aktivira sele potem, ko je prebral vsaj 10 meritev iz senzorjev.
@@ -89,7 +133,7 @@ public class NormalizedLightSensor extends LightSensor {
 	* @params: 
 	*		int rawValue: prebrana vrednost iz senzorja
 	*/
-	private int normalizeValue(int rawValue) {
+	private int normalizeValueToDynamicBounds(int rawValue) {
 
 		/* Upostevaj meritve za dinamicno postavitev meje normalizacije */
 		if (rawValue < boundingMin) {
@@ -106,13 +150,7 @@ public class NormalizedLightSensor extends LightSensor {
 			return rawValue;
 		}
 
-		/* Normaliziraj meritve */
-		if (rawValue < boundingMin) {
-			return boundingMin;
-		} else if (rawValue > boundingMax) {
-			return boundingMax;
-		} else {
-			return (int) (0.01 * (boundingMax - boundingMin) * rawValue + boundingMin); /* krizni racun */
- 		}
+		/* Normaliziraj meritve na nove meje */
+		return normalizeValueToStaticBounds(rawValue);
 	}
 }
