@@ -118,9 +118,9 @@ public class NormalizedLightSensor extends LightSensor {
 	private int normalizeValueToStaticBounds(int rawValue) {
 
 		if (rawValue <= boundingMin) {
-			return boundingMin;
+			return 0;
 		} else if (rawValue >= boundingMax) {
-			return boundingMax;
+			return 100;
 		} else {
 			return (int)(100.0 * ( rawValue - boundingMin ) / ( boundingMax - boundingMin ));
  		}

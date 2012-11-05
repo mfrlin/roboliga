@@ -47,10 +47,10 @@ public class Robot {
 	}
 	
 	public int getSensorReadings() {
-		int leftReading = leftSensor.getComparableValue();
-		int rightReading = rightSensor.getComparableValue();
-		//LCD.drawInt(leftReading, 5, 0, 3);
-		//LCD.drawInt(rightReading, 5, 0, 4);
+		int leftReading = leftSensor.getValue();
+		int rightReading = rightSensor.getValue();
+		LCD.drawInt(leftReading, 5, 0, 0);
+		LCD.drawInt(rightReading, 5, 0, 1);
 		return rightReading - leftReading;
 	}
 
@@ -59,9 +59,9 @@ public class Robot {
 		while(true) {
 			int read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
 			//int read = (int) (Math.random()*40-20);
-			LCD.drawInt(read, 5, 0, 1);
+			//LCD.drawInt(read, 5, 0, 1);
 			int steer =  (int)myPID.compute(read, 0);
-			LCD.drawInt(steer, 5, 0, 2);
+			//LCD.drawInt(steer, 5, 0, 2);
 			//int direction = Math.round(Math.signum(read));
 			steerHistory[steerHistoryCount % historyArrayLength] = steer;
 			steer(steer);
