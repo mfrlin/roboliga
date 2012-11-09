@@ -2,6 +2,7 @@ RoboLiga - Lazers, pew pew
 
 Ideje:
     ❍ upocasni v ovinku -> shranjuj podatke in ce abs(sum) > alpha zmanjsaj hitrost
+    ☐ Normaliziraj moc motorjev, ker je eden obcutno mocnejsi od drugega.
 
 Crazy ideas:
     ❍ music playing while running

@@ -13,7 +13,7 @@ public class StartPoint {
 		 * uredi tale starting point in zakomentiraj bluetooth povezovanje. */
 		if (Bluetooth.getFriendlyName().equals("gluh")) {
 			int robotPower = 20;
-			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S2, SensorPort.S3, robotPower);
+			ActiveRobot lineFollower = new ActiveRobot(MotorPort.A, MotorPort.B, SensorPort.S2, SensorPort.S3, robotPower, false);
 			lineFollower.actAsReceiver();
 			LCD.drawString("Ready.", 0, 0);
 			Button.waitForAnyPress();
