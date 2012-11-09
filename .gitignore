@@ -4,3 +4,5 @@
 # Ignore leJOS files
 *.nxj
 *.nxd
+*.log
+bin/*.class
