@@ -6,6 +6,7 @@ import java.io.IOException;
 import javax.bluetooth.RemoteDevice;
 
 import lejos.nxt.LCD;
+import lejos.nxt.Sound;
 import lejos.nxt.comm.Bluetooth;
 import lejos.nxt.comm.NXTConnection;
 
@@ -25,6 +26,7 @@ public class Robot {
 			NXTConnection connection = Bluetooth.connect(receiver);
 			if (connection == null) throw new IOException("Connect fail");
 			
+			Sound.beep();
 			inputStream = connection.openDataInputStream();
 			outputStream = connection.openDataOutputStream();
 			
@@ -40,7 +42,7 @@ public class Robot {
 			NXTConnection connection = Bluetooth.waitForConnection();
 			LCD.drawString("Open for connection.", 0, 0);
 			if (connection == null) throw new IOException("Connect fail");
-			
+			Sound.beep();
 			inputStream = connection.openDataInputStream();
 			outputStream = connection.openDataOutputStream();
 			
