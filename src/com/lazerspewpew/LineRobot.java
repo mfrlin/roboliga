@@ -1,3 +1,4 @@
+package com.lazerspewpew;
 import java.io.IOException;
 
 import lejos.nxt.LCD;
