@@ -1,3 +1,4 @@
+package com.lazerspewpew;
 /*
 NormalizedLightSensor je podrazred LightSensor, ki implementira tudi dinamicno in staticno normaliziranje 
 meritev - vrne vrednost med 0 in 100.

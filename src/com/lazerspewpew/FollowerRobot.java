@@ -1,3 +1,4 @@
+package com.lazerspewpew;
 import java.io.IOException;
 import java.util.Queue;
 
@@ -21,7 +22,7 @@ public class FollowerRobot extends Robot {
 		communications.run();
 		while (true) {
 			if (!followData.empty()) {
-				int[] distances = followData.pop();
+				int[] distances = (int[]) followData.pop();
 				leftMotor.setSpeed(distances[0]);
 				rightMotor.setSpeed(distances[1]);
 				leftMotor.rotate(distances[0], true);
