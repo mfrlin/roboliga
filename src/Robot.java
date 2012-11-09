@@ -1,70 +1,76 @@
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
+import javax.bluetooth.RemoteDevice;
+
 import lejos.nxt.LCD;
-import lejos.nxt.NXTMotor;
-import lejos.nxt.MotorPort;
-import lejos.nxt.SensorPort;
+import lejos.nxt.comm.Bluetooth;
+import lejos.nxt.comm.NXTConnection;
+
 
 public class Robot {
-	private NXTMotor leftMotor;
-	private NXTMotor rightMotor;
-	private NormalizedLightSensor leftSensor;
-	private NormalizedLightSensor rightSensor;
-	private int maxPower;
-	private PID myPID;
-	private int historyArrayLength = 100;
-	int[] steerHistory = new int[100];
 	
+	protected DataInputStream inputStream;
+	protected DataOutputStream outputStream;
 	
-	public Robot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
-		leftMotor = new NXTMotor(leftMotorPort);
-		rightMotor = new NXTMotor(rightMotorPort);
-		leftSensor = new NormalizedLightSensor(leftSensorPort);
-		rightSensor = new NormalizedLightSensor(rightSensorPort);
-		setMaxPower(maxPower);
-		setupPID();
-	}
-	
-	public void setMaxPower(int power) {
-		maxPower = power;
-	}
-	
-
-	public void setupPID(){
-		myPID = new PID(3, 0.03, 0.03, -maxPower, maxPower);
-	}
-	
-	public void steer(int difference) {
-		if (difference >= 0) { // turn right or go straight
-			leftMotor.setPower(maxPower);
-			rightMotor.setPower(maxPower - difference);
+	/* Tries to connect to a remote device. It takes name or address of the remote device as an argument.
+	 * Remote device must be paired with the brick beforehand. Returns true if connection is made, otherwise it returns false. */ 
+	public boolean connectToRemote(String name) {
+		try {
+			RemoteDevice receiver = Bluetooth.getKnownDevice(name);
+			if (receiver == null) throw new IOException("no such device");
+			
+			NXTConnection connection = Bluetooth.connect(receiver);
+			if (connection == null) throw new IOException("Connect fail");
+			
+			inputStream = connection.openDataInputStream();
+			outputStream = connection.openDataOutputStream();
+			
+			return true;
+		} catch (Exception ioe) {
+			return false;
 		}
-		else { // turn left
-			leftMotor.setPower(maxPower + difference);
-			rightMotor.setPower(maxPower);
-		}
-		//LCD.drawInt(difference, 5, 0, 5);
-		//LCD.drawInt(leftMotor.getPower(),5, 0, 6);
-		//LCD.drawInt(rightMotor.getPower(),5, 0, 7);
 	}
 	
-	public int getSensorReadings() {
-		int leftReading = leftSensor.getValue();
-		int rightReading = rightSensor.getValue();
-		LCD.drawInt(leftReading, 5, 0, 0);
-		LCD.drawInt(rightReading, 5, 0, 1);
-		return rightReading - leftReading;
-	}
-
-	public void followLine() {
-		int steerHistoryCount = 0;
-		while(true) {
-			int read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
-			//int read = (int) (Math.random()*40-20);
-			//LCD.drawInt(read, 5, 0, 1);
-			int steer =  (int)myPID.compute(read, 0);
-			//LCD.drawInt(steer, 5, 0, 2);
-			//int direction = Math.round(Math.signum(read));
-			steerHistory[steerHistoryCount % historyArrayLength] = steer;
-			steer(steer);
+	/* Listens for connection. If connection is established returns true, otherwise it returns false. */
+	public boolean actAsReceiver() {
+		try {
+			NXTConnection connection = Bluetooth.waitForConnection();
+			LCD.drawString("Open for connection.", 0, 0);
+			if (connection == null) throw new IOException("Connect fail");
+			
+			inputStream = connection.openDataInputStream();
+			outputStream = connection.openDataOutputStream();
+			
+			return true;
+		} catch (Exception ioe) {
+			LCD.clear();
+			return false;
 		}
+	}
+	
+	/* Tries to send an integer. */
+	public boolean sendInt(int number) {
+		try {
+			outputStream.writeInt(number);
+			return true;
+		} catch (Exception ioe) {
+			return false;
+		}
+	}
+	
+	/* Looks if there is any data on the input stream and return true or false */
+	public boolean dataAvailable() {
+		try {
+			if (inputStream.available() == 0) return false;
+			else return true;
+		} catch (Exception ioe) {
+			return false;
+		}
+	}
+	
+	public int receiveInt() throws IOException {
+		return inputStream.readInt();
 	}
 }
