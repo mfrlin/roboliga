@@ -13,10 +13,12 @@ public class StartPointUV {
 	public static void main(String[] args) {
 		int robotPower = 95;
 		ActiveRobot wallFollower = new ActiveRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower, true);
+//		wallFollower.setPID(false);
 		LCD.drawString("Ready.", 0, 0);
 		Button.waitForAnyPress();
 		LCD.clear();
 		wallFollower.followWall();
+//		wallFollower.followLine();
 //		wallFollower.goStraight();
 	}
 }

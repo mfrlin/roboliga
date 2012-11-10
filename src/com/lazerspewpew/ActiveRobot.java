@@ -17,6 +17,7 @@ public class ActiveRobot extends Robot {
 	public UltrasonicSensor usRightSensor;
 	private int maxPower;
 	private PID myPID;
+	private boolean pid = true; /* do we want pid or not*/
 	private long lastSend;
 	private long sendInterval = 1000;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
@@ -32,10 +33,9 @@ public class ActiveRobot extends Robot {
 		leftMotor = new Motor(leftMotorPort, 1);
 		rightMotor = new Motor(rightMotorPort, 0.93); // 0.91 malo na levo
 		this.isGluh = isGluh;
-		this.wantedWallDistance = 20;
+		this.wantedWallDistance = (int) (20 * 1.1);
 		this.wallDistancePathWidth = 0;
 		this.wallFrontDistance = 30;
-		
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
 		usRightSensor = new UltrasonicSensor(rightSensorPort);
@@ -84,10 +84,15 @@ public class ActiveRobot extends Robot {
 
 	
 	private void rotateUntilNoBarrier() {
-		while( usFrontSensor.getDistance() < wallFrontDistance ) {
-//			steer(this.maxPower);
-			leftMotor.empower(3*maxPower/4);
-			rightMotor.empower(-maxPower/4);
+		do {
+			steer(this.maxPower);
+			leftMotor.empower(maxPower/2);
+			rightMotor.empower(-maxPower/2);
+		} while( usFrontSensor.getDistance() < 0.8 * wallFrontDistance );
+		
+		while( usRightSensor.getDistance() < wantedWallDistance ) {
+			leftMotor.empower(maxPower/2);
+			rightMotor.empower(-maxPower/2);
 		}
 	}
 
@@ -102,17 +107,25 @@ public class ActiveRobot extends Robot {
 
 	public void followLine() {
 		//int steerHistoryCount = 0;
+		int read, steer;
+		long now, timeChange;
+		
 		while(true) {
-			int read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
+			read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
 			//int read = (int) (Math.random()*40-20);
 			//LCD.drawInt(read, 5, 0, 1);
-			int steer =  (int)myPID.compute(read, 0);
+			if (pid) {
+				steer = (int)myPID.compute(read, 0);
+			} else {
+				steer = read;
+			}
+			
 			//LCD.drawInt(steer, 5, 0, 2);
 			//int direction = Math.round(Math.signum(read));
 			//steerHistory[steerHistoryCount % historyArrayLength] = steer;
 			steer(steer);
-			long now = System.currentTimeMillis();
-			long timeChange = now - lastSend;
+			now = System.currentTimeMillis();
+			timeChange = now - lastSend;
 			if (timeChange >= sendInterval) {
 				sendTachoCounts();
 				lastSend = now;
@@ -150,24 +163,26 @@ public class ActiveRobot extends Robot {
 					Sound.beep();
 					rotateUntilNoBarrier();
 				} else {	
-					
 					if ( rightDistance < rightPathBoundary ) {
 						steerDifference =  (int)(( wantedWallDistance - rightDistance ) * steerFactor);
 						steerDifference *= steerFactor; 
-						steerDifference = limit(steerDifference, (int) (maxPower * 1) );
+						steerDifference = limit(steerDifference, (int) (maxPower * 0.5) );
 						steer( steerDifference );
 					} else if ( rightDistance > leftPathBoundary ) {
 						steerDifference = (int)(( wantedWallDistance - rightDistance ) * steerFactor);
 						steerDifference *= steerFactor; 
 						steerDifference = limit(steerDifference, (int) (maxPower * 0.5) );
+						// TODO: ?When you thing you have to turn, go straight first, then turn. So you dont crash on the corner
 						steer( steerDifference );
 					}
 				}
 				
 //				LCD.drawString("Steer:", 0, 2);
 //				LCD.drawInt(steerDifference, 7, 2);
+//				Delay.msDelay(500);
 			
 			}
+
 		}
 		
 	}
@@ -204,5 +219,9 @@ public class ActiveRobot extends Robot {
 			steer(0);	
 			Delay.msDelay(500);
 		}
+	}
+
+	public void setPID(boolean b) {
+		this.pid = false;		
 	}
 }

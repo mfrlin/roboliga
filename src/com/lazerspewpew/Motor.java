@@ -2,6 +2,7 @@ package com.lazerspewpew;
 
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTMotor;
+import lejos.util.Delay;
 
 
 public class Motor extends NXTMotor{
@@ -32,5 +33,4 @@ public class Motor extends NXTMotor{
 		this.setPower(power);
 		
 	}
-
 }
