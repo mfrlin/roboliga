@@ -1,11 +1,7 @@
 package com.lazerspewpew;
 import java.io.IOException;
 
-import javax.microedition.lcdui.Font;
-
-import lejos.nxt.Button;
 import lejos.nxt.LCD;
-import lejos.nxt.NXTMotor;
 import lejos.nxt.MotorPort;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Sound;
@@ -13,29 +9,32 @@ import lejos.nxt.UltrasonicSensor;
 import lejos.util.Delay;
 
 public class ActiveRobot extends Robot {
-	private NXTMotor leftMotor;
-	private NXTMotor rightMotor;
+	private Motor leftMotor;
+	private Motor rightMotor;
 	private NormalizedLightSensor leftSensor;
 	private NormalizedLightSensor rightSensor;
-	private UltrasonicSensor usFrontSensor;
-	private UltrasonicSensor usRightSensor;
+	public UltrasonicSensor usFrontSensor;
+	public UltrasonicSensor usRightSensor;
 	private int maxPower;
 	private PID myPID;
 	private long lastSend;
 	private long sendInterval = 1000;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
 	private int wallDistancePathWidth; /* Pri koliksni razliki od zeljene reagiramo -> doloci sirino voznega pasu */
+	private int wallFrontDistance; /* Kdaj reagira ko zazna zid spredaj */
 	private boolean isGluh = false; /* Robot with UltraSonic sensors: true */
+	
 	//private int historyArrayLength = 100;
 	//int[] steerHistory = new int[100];
 	
 	/* This constructor is used for robot with UltraSonic sensor */
 	public ActiveRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower, boolean isGluh) {
-		leftMotor = new NXTMotor(leftMotorPort);
-		rightMotor = new NXTMotor(rightMotorPort);
+		leftMotor = new Motor(leftMotorPort, 1);
+		rightMotor = new Motor(rightMotorPort, 0.93); // 0.91 malo na levo
 		this.isGluh = isGluh;
-		this.wantedWallDistance = 10;
-		this.wallDistancePathWidth = 4;
+		this.wantedWallDistance = 20;
+		this.wallDistancePathWidth = 0;
+		this.wallFrontDistance = 3;
 		
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
@@ -47,8 +46,8 @@ public class ActiveRobot extends Robot {
 	
 	/* This constructor is user for robot with LightSensors */
 	public ActiveRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
-		leftMotor = new NXTMotor(leftMotorPort);
-		rightMotor = new NXTMotor(rightMotorPort);
+		leftMotor = new Motor(leftMotorPort, 1);
+		rightMotor = new Motor(rightMotorPort, 1);
 		leftSensor = new NormalizedLightSensor(leftSensorPort);
 		rightSensor = new NormalizedLightSensor(rightSensorPort);
 		setMaxPower(maxPower);
@@ -66,12 +65,12 @@ public class ActiveRobot extends Robot {
 	
 	public void steer(int difference) {
 		if (difference >= 0) { // turn right or go straight
-			leftMotor.setPower(maxPower);
-			rightMotor.setPower(maxPower - difference);
+			leftMotor.empower(maxPower);
+			rightMotor.empower(maxPower - difference);
 		}
 		else { // turn left
-			leftMotor.setPower(maxPower + difference);
-			rightMotor.setPower(maxPower);
+			leftMotor.empower(maxPower + difference);
+			rightMotor.empower(maxPower);
 		}
 		//LCD.drawInt(difference, 5, 0, 5);
 		//LCD.drawInt(leftMotor.getPower(),5, 0, 6);
@@ -79,8 +78,17 @@ public class ActiveRobot extends Robot {
 	}
 	
 	private void stop() {
-		leftMotor.setPower(0);
-		rightMotor.setPower(0);
+		leftMotor.empower(0);
+		rightMotor.empower(0);
+	}
+
+	
+	private void rotateUntilNoBarrier() {
+		while( usFrontSensor.getDistance() < wallFrontDistance ) {
+//			steer(this.maxPower);
+			leftMotor.empower(3*maxPower/8);
+			rightMotor.empower(-maxPower/4);
+		}
 	}
 
 	
@@ -117,51 +125,63 @@ public class ActiveRobot extends Robot {
 		int leftPathBoundary =(int)( wantedWallDistance + wallDistancePathWidth * 0.5 );
 		int rightPathBoundary = (int)( wantedWallDistance - wallDistancePathWidth * 0.5 );
 		int steerDifference = 0;
-		double steerFactor = 1.5;
+		double steerFactor = 3;
+		
+		long last = System.currentTimeMillis();
+		long now;
 		
 		while (true) {
-			LCD.clear();
 			
-			int frontDistance = usFrontSensor.getDistance();
-			int rightDistance = usRightSensor.getDistance();
+			now = System.currentTimeMillis();
 			
-			LCD.drawString("Front:", 0, 0);
-			LCD.drawString("Right:", 0, 1);
-			LCD.drawInt(frontDistance, 7, 0);
-			LCD.drawInt(rightDistance, 7, 1);
+			if ( now - last > 20) {
+				last = now;
 			
-			if ( frontDistance < 20 ) {
-				Sound.beep();
-				 stop();
-				// TODO: turn left by 90 deg.
-			} else {	
+				int frontDistance = usFrontSensor.getDistance();
+				int rightDistance = usRightSensor.getDistance();
 				
-				if ( rightDistance < rightPathBoundary ) {
-					steerDifference =  (int)(( wantedWallDistance - rightDistance ) * steerFactor);
-				} else if ( rightDistance > leftPathBoundary ) {
-					steerDifference = (int)(( wantedWallDistance - rightDistance ) * steerFactor);
+//				LCD.clear();
+//				LCD.drawString("Front:", 0, 0);
+//				LCD.drawString("Right:", 0, 1);
+//				LCD.drawInt(frontDistance, 7, 0);
+//				LCD.drawInt(rightDistance, 7, 1);
+				
+				if ( frontDistance < wallFrontDistance ) {
+					Sound.beep();
+	//				rotateUntilNoBarrier();
+				} else {	
+					
+					if ( rightDistance < rightPathBoundary ) {
+						steerDifference =  (int)(( wantedWallDistance - rightDistance ) * steerFactor);
+						steerDifference *= steerFactor; 
+						steerDifference = limit(steerDifference, (int) (maxPower * 1) );
+						steer( steerDifference );
+					} else if ( rightDistance > leftPathBoundary ) {
+						steerDifference = (int)(( wantedWallDistance - rightDistance ) * steerFactor);
+						steerDifference *= steerFactor; 
+						steerDifference = limit(steerDifference, (int) (maxPower * 0.5) );
+						steer( steerDifference );
+					}
 				}
 				
-				steerDifference *= steerFactor; 
-				
-				if (steerDifference > 20) {
-					steerDifference = 20;
-				} else if (steerDifference < -20) {
-					steerDifference = -20;
-				}
-				
-				LCD.drawString("Steer:", 0, 2);
-				LCD.drawInt(steerDifference, 7, 2);
-				steer( steerDifference );
-				
+//				LCD.drawString("Steer:", 0, 2);
+//				LCD.drawInt(steerDifference, 7, 2);
+			
 			}
-			
-			
-			Delay.msDelay(500);
 		}
 		
 	}
 	
+	private int limit(int number, int maxBound) {
+		if ( number > maxBound ){
+			return maxBound;
+		}else if ( number < -maxBound ) {
+			return -maxBound;
+		} else {
+			return number;	
+		}
+	}
+
 	public boolean sendTachoCounts() {
 		int leftWheel = leftMotor.getTachoCount();
 		leftMotor.resetTachoCount();
@@ -176,6 +196,13 @@ public class ActiveRobot extends Robot {
 			
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	public void goStraight() {
+		while ( true ) {
+			steer(0);	
+			Delay.msDelay(500);
 		}
 	}
 }
