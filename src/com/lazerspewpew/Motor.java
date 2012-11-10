@@ -2,7 +2,6 @@ package com.lazerspewpew;
 
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTMotor;
-import lejos.util.Delay;
 
 
 public class Motor extends NXTMotor{
@@ -22,7 +21,6 @@ public class Motor extends NXTMotor{
 //			LCD.clear();
 //			LCD.drawInt(power, 0, 0);
 //		}
-		
 		
 		if (power > 100) {
 			power = 100;
