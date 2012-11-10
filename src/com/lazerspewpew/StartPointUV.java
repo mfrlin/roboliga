@@ -11,7 +11,7 @@ public class StartPointUV {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int robotPower = 60;
+		int robotPower = 95;
 		ActiveRobot wallFollower = new ActiveRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower, true);
 		LCD.drawString("Ready.", 0, 0);
 		Button.waitForAnyPress();

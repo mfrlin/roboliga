@@ -34,7 +34,7 @@ public class ActiveRobot extends Robot {
 		this.isGluh = isGluh;
 		this.wantedWallDistance = 20;
 		this.wallDistancePathWidth = 0;
-		this.wallFrontDistance = 3;
+		this.wallFrontDistance = 30;
 		
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
@@ -86,7 +86,7 @@ public class ActiveRobot extends Robot {
 	private void rotateUntilNoBarrier() {
 		while( usFrontSensor.getDistance() < wallFrontDistance ) {
 //			steer(this.maxPower);
-			leftMotor.empower(3*maxPower/8);
+			leftMotor.empower(3*maxPower/4);
 			rightMotor.empower(-maxPower/4);
 		}
 	}
@@ -134,7 +134,7 @@ public class ActiveRobot extends Robot {
 			
 			now = System.currentTimeMillis();
 			
-			if ( now - last > 20) {
+			if ( now - last > (1.0 / maxPower) * 1000) {
 				last = now;
 			
 				int frontDistance = usFrontSensor.getDistance();
@@ -148,7 +148,7 @@ public class ActiveRobot extends Robot {
 				
 				if ( frontDistance < wallFrontDistance ) {
 					Sound.beep();
-	//				rotateUntilNoBarrier();
+					rotateUntilNoBarrier();
 				} else {	
 					
 					if ( rightDistance < rightPathBoundary ) {
