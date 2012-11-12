@@ -9,7 +9,7 @@ public class Motor extends NXTMotor{
 	private double maxPowerOverSpeed; /* Should NEVER be larger than 1 */
 
 	public Motor(MotorPort port, double maxPowerOverSpeed) {
-		super(port);
+		super(port, lejos.nxt.BasicMotorPort.PWM_BRAKE);
 		this.maxPowerOverSpeed = maxPowerOverSpeed;
 	}
 	

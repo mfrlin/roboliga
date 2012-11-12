@@ -26,10 +26,10 @@ public class Robot {
 			NXTConnection connection = Bluetooth.connect(receiver);
 			if (connection == null) throw new IOException("Connect fail");
 			
-			Sound.beep();
+			
 			inputStream = connection.openDataInputStream();
 			outputStream = connection.openDataOutputStream();
-			
+			Sound.beep();
 			return true;
 		} catch (Exception ioe) {
 			return false;
@@ -42,10 +42,10 @@ public class Robot {
 			NXTConnection connection = Bluetooth.waitForConnection();
 			LCD.drawString("Open for connection.", 0, 0);
 			if (connection == null) throw new IOException("Connect fail");
-			Sound.beep();
+			
 			inputStream = connection.openDataInputStream();
 			outputStream = connection.openDataOutputStream();
-			
+			Sound.twoBeeps();
 			return true;
 		} catch (Exception ioe) {
 			LCD.clear();

@@ -90,6 +90,8 @@ public class ActiveRobot extends Robot {
 		Delay.msDelay(300);
 		steer(0);
 		Delay.msDelay(300);
+		
+		
 	}
 
 	
@@ -118,7 +120,7 @@ public class ActiveRobot extends Robot {
 			now = System.currentTimeMillis();
 			timeChange = now - lastSend;
 			if (timeChange >= sendInterval) {
-				sendTachoCounts();
+				sendTachoCounts((int)timeChange);
 				lastSend = now;
 			}
 		}
@@ -127,6 +129,7 @@ public class ActiveRobot extends Robot {
 	public void followWall() {
 		int steerDifference = 0;
 		double steerFactor = 3;
+		long now, timeChange;
 				
 		while (true) {			
 			int frontDistance = usFrontSensor.getDistance();
@@ -134,14 +137,30 @@ public class ActiveRobot extends Robot {
 			
 			// Ce se pribliza steni spredaj se obrni za ~90deg.
 			if ( frontDistance < wallFrontDistance ) {
-				Sound.beep();
+				//Sound.beep();
+				now = System.currentTimeMillis();
+				timeChange = now - lastSend;
+				sendTachoCounts((int)timeChange);
+				lastSend = now;
 				rotateUntilNoBarrier();
+				now = System.currentTimeMillis();
+				timeChange = now - lastSend;
+				sendTachoCounts((int)timeChange);
+				lastSend = now;
 			} else {	
 				// Ce imas pa zid na desni, se postavi na wantedWallDistance
 				steerDifference = (int)(( wantedWallDistance - rightDistance ) * steerFactor);
 				steerDifference *= steerFactor; 
 				steerDifference = limit(steerDifference, (int) (maxPower * 0.5) );
 				steer( steerDifference );
+			}
+			
+			
+			now = System.currentTimeMillis();
+			timeChange = now - lastSend;
+			if (timeChange >= sendInterval) {
+				sendTachoCounts((int)timeChange);
+				lastSend = now;
 			}
 			
 //			LCD.clear();
@@ -167,7 +186,7 @@ public class ActiveRobot extends Robot {
 		}
 	}
 
-	public boolean sendTachoCounts() {
+	public boolean sendTachoCounts(int elapsedTime) {
 		int leftWheel = leftMotor.getTachoCount();
 		leftMotor.resetTachoCount();
 		int rightWheel = rightMotor.getTachoCount();
@@ -175,6 +194,21 @@ public class ActiveRobot extends Robot {
 		try {
 			outputStream.writeInt(leftWheel);
 			outputStream.writeInt(rightWheel);
+			outputStream.writeInt(elapsedTime);
+			outputStream.flush();
+			return true;
+		} catch (IOException e) {
+			
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean sendTachoCounts(int val1, int val2, int val3) {
+		try {
+			outputStream.writeInt(val1);
+			outputStream.writeInt(val2);
+			outputStream.writeInt(val3);
 			outputStream.flush();
 			return true;
 		} catch (IOException e) {
@@ -185,9 +219,20 @@ public class ActiveRobot extends Robot {
 	}
 
 	public void goStraight() {
+		long now, timeChange;
+		
 		while ( true ) {
 			steer(0);	
-			Delay.msDelay(500);
+			//Delay.msDelay(500);
+			now = System.currentTimeMillis();
+			timeChange = now - lastSend;
+			if (timeChange >= sendInterval) {
+				//sendTachoCounts();
+				lastSend = now;
+			}
 		}
 	}
 }
+
+
+
