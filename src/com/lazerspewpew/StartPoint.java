@@ -17,7 +17,6 @@ public class StartPoint {
 			lineFollower.actAsReceiver();
 			LCD.drawString("Ready.", 0, 0);
 			Button.waitForAnyPress();
-			lineFollower.sendTachoCounts(370,370,1000);
 			LCD.clear();
 			// lineFollower.followLine();
 			lineFollower.followWall();
@@ -32,6 +31,7 @@ public class StartPoint {
 			LCD.clear();
 			robotFollower.connectToRemote("slep");
 			robotFollower.follow();
+			//robotFollower.test();
 			
 		}
 	}

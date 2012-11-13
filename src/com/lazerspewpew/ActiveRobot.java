@@ -17,7 +17,7 @@ public class ActiveRobot extends Robot {
 	private int maxPower;
 	private PID myPID;
 	private long lastSend;
-	private long sendInterval = 1000;
+	private long sendInterval = 50;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
 	private int wallFrontDistance; /* Kdaj reagira ko zazna zid spredaj */
 	
@@ -28,8 +28,8 @@ public class ActiveRobot extends Robot {
 	public ActiveRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower, boolean isGluh) {
 		leftMotor = new Motor(leftMotorPort, 1);
 		rightMotor = new Motor(rightMotorPort, 0.93); // desni motor je mocnejsi, zato ga malo upocasni, da bo peljal naravnost
-		this.wantedWallDistance = (int) (20 * 1.1); // 1.1 pride od tega, da je senzor pod kotom ~13deg.
-		this.wallFrontDistance = 20; // Zeljena razdalja voznje od stene v cm.
+		this.wantedWallDistance = (int) (22 * 1.1); // 1.1 pride od tega, da je senzor pod kotom ~13deg.
+		this.wallFrontDistance = 24; // Zeljena razdalja voznje od stene v cm.
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
 		usRightSensor = new UltrasonicSensor(rightSensorPort);
@@ -84,7 +84,7 @@ public class ActiveRobot extends Robot {
 			steer(this.maxPower);
 			leftMotor.empower(3 * maxPower/4);
 			rightMotor.empower(-maxPower/2);
-		} while( usFrontSensor.getDistance() < 0.8 * wallFrontDistance || usRightSensor.getDistance() < wantedWallDistance );
+		} while( usFrontSensor.getDistance() < 0.7 * wallFrontDistance || usRightSensor.getDistance() < wantedWallDistance );
 		
 		/* Zaradi teh delajev vozi bolj naravno. */
 		Delay.msDelay(300);
@@ -120,7 +120,7 @@ public class ActiveRobot extends Robot {
 			now = System.currentTimeMillis();
 			timeChange = now - lastSend;
 			if (timeChange >= sendInterval) {
-				sendTachoCounts((int)timeChange);
+				sendTachoCounts();
 				lastSend = now;
 			}
 		}
@@ -138,15 +138,16 @@ public class ActiveRobot extends Robot {
 			// Ce se pribliza steni spredaj se obrni za ~90deg.
 			if ( frontDistance < wallFrontDistance ) {
 				//Sound.beep();
-				now = System.currentTimeMillis();
-				timeChange = now - lastSend;
-				sendTachoCounts((int)timeChange);
-				lastSend = now;
+				//now = System.currentTimeMillis();
+				//timeChange = now - lastSend;
+				//sendTachoCounts((int)timeChange);
+				//lastSend = now;
 				rotateUntilNoBarrier();
-				now = System.currentTimeMillis();
-				timeChange = now - lastSend;
-				sendTachoCounts((int)timeChange);
-				lastSend = now;
+				//now = System.currentTimeMillis();
+				//timeChange = now - lastSend;
+				//sendTachoCounts((int)timeChange);
+				//lastSend = now;
+				//timeChange = 0;
 			} else {	
 				// Ce imas pa zid na desni, se postavi na wantedWallDistance
 				steerDifference = (int)(( wantedWallDistance - rightDistance ) * steerFactor);
@@ -159,7 +160,7 @@ public class ActiveRobot extends Robot {
 			now = System.currentTimeMillis();
 			timeChange = now - lastSend;
 			if (timeChange >= sendInterval) {
-				sendTachoCounts((int)timeChange);
+				sendTachoCounts();
 				lastSend = now;
 			}
 			
@@ -186,7 +187,7 @@ public class ActiveRobot extends Robot {
 		}
 	}
 
-	public boolean sendTachoCounts(int elapsedTime) {
+	public boolean sendTachoCounts() {
 		int leftWheel = leftMotor.getTachoCount();
 		leftMotor.resetTachoCount();
 		int rightWheel = rightMotor.getTachoCount();
@@ -194,21 +195,19 @@ public class ActiveRobot extends Robot {
 		try {
 			outputStream.writeInt(leftWheel);
 			outputStream.writeInt(rightWheel);
-			outputStream.writeInt(elapsedTime);
 			outputStream.flush();
 			return true;
 		} catch (IOException e) {
-			
+			Sound.beep();
 			e.printStackTrace();
 			return false;
 		}
 	}
 	
-	public boolean sendTachoCounts(int val1, int val2, int val3) {
+	public boolean sendTachoCounts(int val1, int val2) {
 		try {
 			outputStream.writeInt(val1);
 			outputStream.writeInt(val2);
-			outputStream.writeInt(val3);
 			outputStream.flush();
 			return true;
 		} catch (IOException e) {
