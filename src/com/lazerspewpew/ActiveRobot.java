@@ -142,7 +142,9 @@ public class ActiveRobot extends Robot {
 				//timeChange = now - lastSend;
 				//sendTachoCounts((int)timeChange);
 				//lastSend = now;
+				sendTachoCounts();
 				rotateUntilNoBarrier();
+				sendTachoCounts();
 				//now = System.currentTimeMillis();
 				//timeChange = now - lastSend;
 				//sendTachoCounts((int)timeChange);
