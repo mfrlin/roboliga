@@ -17,7 +17,7 @@ public class ActiveRobot extends Robot {
 	private int maxPower;
 	private PID myPID;
 	private long lastSend;
-	private long sendInterval = 50;
+	private long sendInterval = 500;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
 	private int wallFrontDistance; /* Kdaj reagira ko zazna zid spredaj */
 	
@@ -137,14 +137,11 @@ public class ActiveRobot extends Robot {
 			
 			// Ce se pribliza steni spredaj se obrni za ~90deg.
 			if ( frontDistance < wallFrontDistance ) {
-				//Sound.beep();
 				//now = System.currentTimeMillis();
 				//timeChange = now - lastSend;
 				//sendTachoCounts((int)timeChange);
 				//lastSend = now;
-				sendTachoCounts();
 				rotateUntilNoBarrier();
-				sendTachoCounts();
 				//now = System.currentTimeMillis();
 				//timeChange = now - lastSend;
 				//sendTachoCounts((int)timeChange);
@@ -200,7 +197,6 @@ public class ActiveRobot extends Robot {
 			outputStream.flush();
 			return true;
 		} catch (IOException e) {
-			Sound.beep();
 			e.printStackTrace();
 			return false;
 		}
