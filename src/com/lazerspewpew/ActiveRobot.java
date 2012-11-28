@@ -17,7 +17,7 @@ public class ActiveRobot extends Robot {
 	private int maxPower;
 	private PID myPID;
 	private long lastSend;
-	private long sendInterval = 50;
+	private long sendInterval = 500;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
 	private int wallFrontDistance; /* Kdaj reagira ko zazna zid spredaj */
 	

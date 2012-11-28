@@ -11,6 +11,7 @@ public class StartPoint {
 		/* gluh je ime bricka, ki mu NE dela ekrancek. uporabil ga bom za sledenje crte in kot receiverja, ker ga kot initiatorja ne morem,
 		 * ker ne morem dodati drugega bricka na slepo pod known devices. pedro, ti bos verjetno uporabljal drug brick za sledenje zidu.
 		 * uredi tale starting point in zakomentiraj bluetooth povezovanje. */
+		LCD.drawString(Bluetooth.getFriendlyName(), 0, 0);
 		if (Bluetooth.getFriendlyName().equals("slep")) {
 			int robotPower = 95;
 			ActiveRobot lineFollower = new ActiveRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower, true);
@@ -19,7 +20,7 @@ public class StartPoint {
 			Button.waitForAnyPress();
 			LCD.clear();
 			// lineFollower.followLine();
-			lineFollower.followWall();
+			lineFollower.goStraight();
 			//lineFollower.goStraight();
 		}
 		
