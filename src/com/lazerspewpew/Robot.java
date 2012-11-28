@@ -12,9 +12,18 @@ import lejos.nxt.comm.NXTConnection;
 
 
 public class Robot {
-	
+	protected PID myPID;
 	protected DataInputStream inputStream;
 	protected DataOutputStream outputStream;
+	protected int maxPower;
+	
+	public void setMaxPower(int power) {
+		maxPower = power;
+	}
+	
+	public void setupPID(int lowerBound, int higherBound){
+		myPID = new PID(3, 0.03, 0.03, lowerBound, higherBound);
+	}
 	
 	/* Tries to connect to a remote device. It takes name or address of the remote device as an argument.
 	 * Remote device must be paired with the brick beforehand. Returns true if connection is made, otherwise it returns false. */ 
