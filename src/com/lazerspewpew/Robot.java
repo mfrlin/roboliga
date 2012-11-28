@@ -39,7 +39,10 @@ public class Robot {
 	/* Listens for connection. If connection is established returns true, otherwise it returns false. */
 	public boolean actAsReceiver() {
 		try {
+			LCD.drawString(Bluetooth.getFriendlyName(), 0, 0);
+			LCD.drawString("Waiting for connnection.", 0, 0);
 			NXTConnection connection = Bluetooth.waitForConnection();
+			LCD.clear();
 			LCD.drawString("Open for connection.", 0, 0);
 			if (connection == null) throw new IOException("Connect fail");
 			

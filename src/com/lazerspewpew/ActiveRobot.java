@@ -137,7 +137,6 @@ public class ActiveRobot extends Robot {
 			
 			// Ce se pribliza steni spredaj se obrni za ~90deg.
 			if ( frontDistance < wallFrontDistance ) {
-				//Sound.beep();
 				//now = System.currentTimeMillis();
 				//timeChange = now - lastSend;
 				//sendTachoCounts((int)timeChange);
@@ -198,7 +197,6 @@ public class ActiveRobot extends Robot {
 			outputStream.flush();
 			return true;
 		} catch (IOException e) {
-			Sound.beep();
 			e.printStackTrace();
 			return false;
 		}
@@ -232,6 +230,3 @@ public class ActiveRobot extends Robot {
 		}
 	}
 }
-
-
-

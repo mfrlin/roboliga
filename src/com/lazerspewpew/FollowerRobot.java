@@ -34,8 +34,8 @@ public class FollowerRobot extends Robot {
 		Thread communications = new Thread(new Communicate());
 		communications.start();
 		
-		leftMotor.setAcceleration(4000);
-		rightMotor.setAcceleration(4000);
+		leftMotor.setAcceleration(2000);
+		rightMotor.setAcceleration(2000);
 		boolean firstSend = true;
 		while (true) {
 			int[] parameters = null;
@@ -58,13 +58,12 @@ public class FollowerRobot extends Robot {
 					}
 					leftMotor.setSpeed(parameters[0]*2);
 					rightMotor.setSpeed(parameters[1]*2);
-					leftMotor.rotateTo(parameters[0]);
-					rightMotor.rotateTo(parameters[1]);
-					while (leftMotor.getTachoCount() < parameters[0]-2 || rightMotor.getTachoCount() < parameters[1]-2 ) {
+					leftMotor.rotateTo(parameters[0], true);
+					rightMotor.rotateTo(parameters[1], true);
+					while (leftMotor.getTachoCount() < parameters[0] -3 || rightMotor.getTachoCount() < parameters[1] -3){
 						continue;
 					}
-					leftMotor.flt();
-					rightMotor.flt();
+					
 				}
 		}
 	}
@@ -82,7 +81,6 @@ public class FollowerRobot extends Robot {
 			LCD.drawInt(temp[0], 0, 1);
 		} catch (IOException e) {
 			e.printStackTrace();
-			Sound.beep();
 		}
 	}
 	
@@ -102,3 +100,4 @@ public class FollowerRobot extends Robot {
 		}
 	}
 }
+
