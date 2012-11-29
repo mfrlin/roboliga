@@ -24,10 +24,10 @@ public class LineRobot extends Robot {
 		rightMotor = new NXTMotor(rightMotorPort);
 		leftSensor = new NormalizedLightSensor(leftSensorPort);
 		rightSensor = new NormalizedLightSensor(rightSensorPort);
-		calibrateLightSensors(); // calibrira, in nastavi delovanje na staticno normalizacijo
-		Button.waitForAnyPress(); // FIXME: preveri ali se pravilno kalibrira. Nato izbrisi;
 		setMaxPower(maxPower);
 		setupPID(-maxPower, maxPower);
+		calibrateLightSensors(); // calibrira, in nastavi delovanje na staticno normalizacijo
+		Button.waitForAnyPress(); // FIXME: preveri ali se pravilno kalibrira. Nato izbrisi;
 	}
 
 	private void calibrateLightSensors() {
@@ -36,41 +36,35 @@ public class LineRobot extends Robot {
 		int boundingMaxRight = 0;
 		int boundingMinRight = 9999;
 
-		int stMeritev = 10;
-
-		LCD.drawString("Postavi na crno crto", 0, 0);
-		Button.waitForAnyPress();
-		LCD.drawString("Meljem podatke", 0, 1);
-		for (int i = 0; i < stMeritev; i++) {
-			int rawValueLeft = leftSensor.getLightValue();
-			int rawValueRight = rightSensor.getLightValue();
-			if(rawValueLeft < boundingMinLeft)
-				boundingMinLeft = rawValueLeft;
-			if(rawValueRight < boundingMinRight)
-				boundingMinRight = rawValueRight;
-			//boundingMinRight = (rawValueRight > boundingMinRight) ? rawValueRight : boundingMinRight;
-		}
-		Sound.beep();
-
-		LCD.clear();
-
-		LCD.drawString("Postavi na belo poglago", 0, 0);
-		Button.waitForAnyPress();
-		LCD.drawString("Meljem podatke", 0, 1);
-		for (int i = 0; i < stMeritev; i++) {
-			int rawValueLeft = leftSensor.getLightValue();
-			int rawValueRight = rightSensor.getLightValue();
-			if(rawValueLeft > boundingMaxLeft)
-				boundingMaxLeft = rawValueLeft;
-			if(rawValueRight > boundingMaxRight)
-				boundingMaxRight = rawValueRight;
-		}
-		Sound.beep();
-
-		LCD.clear();
-		LCD.drawString("Left: [" + boundingMinLeft +", "+boundingMaxLeft+"]", 0, 0);
-		LCD.drawString("Right: [" + boundingMinRight +", "+boundingMaxRight+"]", 0, 1);
 		
+
+		LCD.clear();
+		LCD.drawString("Postavi me pred crto", 0, 0);
+		Button.waitForAnyPress();
+		steer(0);
+		int stMeritev = 100, leftTemp, rightTemp;
+		//int[] arr = new int[stMeritev];
+		leftTemp = leftSensor.getLightValue();
+		rightTemp = rightSensor.getLightValue();
+		boundingMinLeft = leftTemp;
+		boundingMaxLeft = leftTemp;
+		boundingMinRight = rightTemp;
+		boundingMaxRight = rightTemp;
+		for(int i=0;i<stMeritev;i++){
+			Delay.msDelay(5);
+			leftTemp = leftSensor.getLightValue();
+			rightTemp = rightSensor.getLightValue();
+			boundingMinLeft = (leftTemp < boundingMinLeft) ? leftTemp : boundingMinLeft;
+			boundingMaxLeft = (leftTemp > boundingMaxLeft) ? leftTemp : boundingMaxLeft;
+			boundingMinRight = (rightTemp < boundingMinRight) ? rightTemp : boundingMinRight;
+			boundingMaxRight = (rightTemp > boundingMaxRight) ? rightTemp : boundingMaxRight;
+		}
+		LCD.clear();
+		leftMotor.stop();
+		rightMotor.stop();
+		LCD.drawString("Levi:  ["+boundingMinLeft+", "+boundingMaxLeft+"]",0,0);
+		LCD.drawString("Desni: ["+boundingMinRight+", "+boundingMaxRight+"]",0,1);
+		Delay.msDelay(1000);
 		leftSensor.setFixedBoundaries(boundingMinLeft, boundingMaxLeft);
 		rightSensor.setFixedBoundaries(boundingMinRight, boundingMaxRight);
 	}
@@ -103,29 +97,35 @@ public class LineRobot extends Robot {
 	}
 	
 	public void followLine() {
+		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000;
+		int[] arr = new int[parameter];
 		int read, difference;
-		long now, timeChange;
-		
+		for(int i=0;i<parameter;i++){
+			arr[i] = getSensorReadings();
+			difference = (int)myPID.compute(arr[i], 0);
+			steer(difference);
+		}
 		while(true) {
 			read = getSensorReadings(); 
+			arr[count%100] = read;
 			difference = (int)myPID.compute(read, 0);
-			steer(difference);
-			// pošiljanje podatkov
-			/*now = System.currentTimeMillis();
-			timeChange = now - lastSend;
-			if (timeChange >= sendInterval) {
-				sendTachoCounts();
-				lastSend = now;
-			}*/
-			if (lineEnd) {
-				try {
-					outputStream.writeInt(1);
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-				}
+			if(count % 10 == 0) {
+				LCD.drawInt(difference, 0, 0);
+				Sound.twoBeeps();
 			}
+			if(sum(arr)>parameter2){
+				Sound.beepSequence();
+				Sound.beepSequenceUp();
+			}
+			steer(difference);
 		}
+	}
+	public int sum(int[] arr){
+		int temp = 0;
+		for(int i=0;i<arr.length;i++){
+			temp += arr[i];
+		}
+		return temp;
 	}
 
 }

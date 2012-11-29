@@ -104,25 +104,11 @@ public class ActiveRobot extends Robot {
 	}
 
 	public void followLine() {
-		//int steerHistoryCount = 0;
 		int read, steer;
-		long now, timeChange;
-		
 		while(true) {
 			read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
-			//int read = (int) (Math.random()*40-20);
-			//LCD.drawInt(read, 5, 0, 1);
 			steer = (int)myPID.compute(read, 0);
-			
-			//LCD.drawInt(steer, 5, 0, 2);
-			//steerHistory[steerHistoryCount % historyArrayLength] = steer;
 			steer(steer);
-			now = System.currentTimeMillis();
-			timeChange = now - lastSend;
-			if (timeChange >= sendInterval) {
-				sendTachoCounts();
-				lastSend = now;
-			}
 		}
 	}
 	
@@ -134,19 +120,9 @@ public class ActiveRobot extends Robot {
 		while (true) {			
 			int frontDistance = usFrontSensor.getDistance();
 			int rightDistance = usRightSensor.getDistance();
-			
 			// Ce se pribliza steni spredaj se obrni za ~90deg.
 			if ( frontDistance < wallFrontDistance ) {
-				//now = System.currentTimeMillis();
-				//timeChange = now - lastSend;
-				//sendTachoCounts((int)timeChange);
-				//lastSend = now;
 				rotateUntilNoBarrier();
-				//now = System.currentTimeMillis();
-				//timeChange = now - lastSend;
-				//sendTachoCounts((int)timeChange);
-				//lastSend = now;
-				//timeChange = 0;
 			} else {	
 				// Ce imas pa zid na desni, se postavi na wantedWallDistance
 				steerDifference = (int)(( wantedWallDistance - rightDistance ) * steerFactor);
