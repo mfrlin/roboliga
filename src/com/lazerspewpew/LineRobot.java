@@ -44,10 +44,11 @@ public class LineRobot extends Robot {
 		for (int i = 0; i < stMeritev; i++) {
 			int rawValueLeft = leftSensor.getLightValue();
 			int rawValueRight = rightSensor.getLightValue();
-			if(rawValueLeft > boundingMaxLeft)
-				boundingMaxLeft = rawValueLeft;
-			if(rawValueRight > boundingMaxRight)
-				boundingMaxRight = rawValueRight;
+			if(rawValueLeft < boundingMinLeft)
+				boundingMinLeft = rawValueLeft;
+			if(rawValueRight < boundingMinRight)
+				boundingMinRight = rawValueRight;
+			//boundingMinRight = (rawValueRight > boundingMinRight) ? rawValueRight : boundingMinRight;
 		}
 		Sound.beep();
 
@@ -59,16 +60,16 @@ public class LineRobot extends Robot {
 		for (int i = 0; i < stMeritev; i++) {
 			int rawValueLeft = leftSensor.getLightValue();
 			int rawValueRight = rightSensor.getLightValue();
-			if(rawValueLeft < boundingMinLeft)
-				boundingMinLeft = rawValueLeft;
-			if(rawValueRight < boundingMinRight)
-				boundingMinRight = rawValueRight;
+			if(rawValueLeft > boundingMaxLeft)
+				boundingMaxLeft = rawValueLeft;
+			if(rawValueRight > boundingMaxRight)
+				boundingMaxRight = rawValueRight;
 		}
 		Sound.beep();
 
 		LCD.clear();
-		LCD.drawString("Left: [" + boundingMinLeft +","+boundingMaxLeft+" ]", 0, 0);
-		LCD.drawString("Right: [" + boundingMinRight +","+boundingMaxRight+" ]", 0, 1);
+		LCD.drawString("Left: [" + boundingMinLeft +", "+boundingMaxLeft+"]", 0, 0);
+		LCD.drawString("Right: [" + boundingMinRight +", "+boundingMaxRight+"]", 0, 1);
 		
 		leftSensor.setFixedBoundaries(boundingMinLeft, boundingMaxLeft);
 		rightSensor.setFixedBoundaries(boundingMinRight, boundingMaxRight);
