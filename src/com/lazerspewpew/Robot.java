@@ -41,7 +41,6 @@ public class Robot {
 			
 			inputStream = connection.openDataInputStream();
 			outputStream = connection.openDataOutputStream();
-			Sound.beep();
 			return true;
 		} catch (Exception ioe) {
 			return false;
@@ -60,7 +59,6 @@ public class Robot {
 			
 			inputStream = connection.openDataInputStream();
 			outputStream = connection.openDataOutputStream();
-			Sound.twoBeeps();
 			return true;
 		} catch (Exception ioe) {
 			LCD.clear();

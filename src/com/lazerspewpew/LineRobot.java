@@ -5,10 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTMotor;
 import lejos.nxt.SensorPort;
+import lejos.nxt.Sound;
 import lejos.util.Delay;
 
 public class LineRobot extends Robot {
@@ -33,20 +35,29 @@ public class LineRobot extends Robot {
 	}
 	
 	public void followLine() {
-		DataOutputStream dos = createDos();                //ustvari dataOutputStream
-		int read, steer, timeChange;
+		//DataOutputStream dos = createDos();
+
+		int read, steer, timeChange, sequenceNumber;
 		long now, lastSend = System.currentTimeMillis();
 		int iterCounter = 1;
+		int frekvencaPosiljanja = 1000;
 		while(true) {
-			read = getSensorReadings(); 
-			writeReadToFile(dos, read);
+			read = getSensorReadings();
 			iterCounter = iterCounter + 1; 
 			// pošiljanje podatkov
-			if((iterCounter % 100) == 0) {//pošilja vsako pol sekunde, i.e. 100*5ms = pol sekunde, hardcodano
+			if((iterCounter % frekvencaPosiljanja) == 0) {//pošilja vsako pol sekunde, i.e. 100*5ms = pol sekunde, hardcodano
 				now = System.currentTimeMillis();
 				timeChange = (int) (now - lastSend);
 				lastSend = (int) now;
-				sendData( (iterCounter / 100) - 1, timeChange, read);
+				LCD.drawInt(333,0,0);
+				LCD.drawInt(444,0,1);
+				LCD.drawInt(555,0,2);
+				//LCD.drawInt((iterCounter / 100) - 1,0,0);
+				//LCD.drawInt(timeChange,0,1);
+				//LCD.drawInt(read,0,2);
+				//sequenceNumber = (iterCounter / frekvencaPosiljanja) - 1;
+				//sendData(sequenceNumber, timeChange, read);
+				sendData(333, 444, 555);
 			}
 			steer = (int)myPID.compute(read, 0);
 			steer(steer);
@@ -61,16 +72,18 @@ public class LineRobot extends Robot {
 		try {
 			fos = new FileOutputStream(dat);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 			LCD.drawString("Napaka pri ustvarjanju streama", 0, 0);
 		}
 		return dos;
 	}
 	private void writeReadToFile(DataOutputStream dos, int read){
 		try {
-			dos.writeInt(read);
+			Sound.beepSequence();
+			if(dos == null) Sound.buzz();
+			dos.writeInt(555);
+			Sound.beepSequenceUp();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Sound.beepSequence();
 			LCD.drawString("Pisanje ni uspelo", 0, 0);
 		}
 	}

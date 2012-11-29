@@ -9,6 +9,7 @@ import lejos.nxt.NXTMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Sound;
 import lejos.nxt.UltrasonicSensor;
+import lejos.util.Delay;
 
 public class WallRobot extends Robot {
 	private UltrasonicSensor usFrontSensor;
@@ -30,18 +31,23 @@ public class WallRobot extends Robot {
 		setupPID(-maxPower, maxPower);
 	}
 	public void follow(){
-		int lastConsequentialNumber = 0;
-		int currentConsequentialNumber = 0, timeChange = 0, read = 0, steer;
+		int lastSequenceNumber = -1;
+		int currentSequencelNumber = 0, timeChange = 0, read = 0, steer;
 		while(true){
 			
 			try {
-				currentConsequentialNumber = inputStream.readInt();
+				currentSequencelNumber = inputStream.readInt();
 				timeChange = inputStream.readInt();
 				read = inputStream.readInt();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			if(currentConsequentialNumber != (lastConsequentialNumber + 1)){
+			Sound.twoBeeps();
+			LCD.drawInt(currentSequencelNumber, 0, 0);
+			LCD.drawInt(lastSequenceNumber, 0,1);
+			LCD.drawInt(read, 0,2);
+			if(currentSequencelNumber != (lastSequenceNumber + 1)){
+				Delay.msDelay(2000);
 				Sound.twoBeeps();
 				Sound.twoBeeps();
 				Sound.twoBeeps();

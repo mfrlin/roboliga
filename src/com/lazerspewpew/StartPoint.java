@@ -9,8 +9,6 @@ import lejos.util.Delay;
 public class StartPoint {
 
 	public static void main(String[] args) {
-		//SPREMENJENO IME
-		//SPREMENJENO IME
 		if (Bluetooth.getFriendlyName().equals("Crta")) {
 			int robotPower = 95;
 			LineRobot crta = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
@@ -21,8 +19,6 @@ public class StartPoint {
 			LCD.clear();
 			crta.followLine();
 		}
-		//SPREMENJENO IME
-		//SPREMENJENO IME
 		else if (Bluetooth.getFriendlyName().equals("Zid")) {
 			int robotPower = 95;
 			WallRobot zid = new WallRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
