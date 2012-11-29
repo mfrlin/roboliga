@@ -11,6 +11,8 @@ public class LineRobot extends Robot {
 	private NXTMotor rightMotor;
 	private NormalizedLightSensor leftSensor;
 	private NormalizedLightSensor rightSensor;
+	private int[] readingsArray = new int[5];
+	private boolean lineEnd = false;
 	//private long lastSend;
 	//private long sendInterval = 500;
 	
@@ -37,6 +39,15 @@ public class LineRobot extends Robot {
 	public int getSensorReadings() {
 		int leftReading = leftSensor.getValue();
 		int rightReading = rightSensor.getValue();
+		int arrayCounter = 0;
+		int total = 0;
+		readingsArray[arrayCounter % readingsArray.length] = rightReading + leftReading;
+		for (int reading : readingsArray) {
+			total += reading;
+		}
+		if (total < 50) { // this number needs tweaking
+			lineEnd = true;
+		}
 		return rightReading - leftReading;
 	}
 	
@@ -55,7 +66,6 @@ public class LineRobot extends Robot {
 				sendTachoCounts();
 				lastSend = now;
 			}*/
-			boolean lineEnd = false;
 			if (lineEnd) {
 				try {
 					outputStream.writeInt(1);
