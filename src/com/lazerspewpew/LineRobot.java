@@ -91,7 +91,8 @@ public class LineRobot extends Robot {
 		int rightReading = rightSensor.getValue();
 		int arrayCounter = 0;
 		int total = 0;
-		readingsArray[arrayCounter % readingsArray.length] = rightReading + leftReading;
+		//readingsArray[arrayCounter % readingsArray.length] = rightReading + leftReading;
+		readingsArray[arrayCounter % readingsArray.length] = (rightReading > leftReading) ? rightReading : leftReading;
 		for (int reading : readingsArray) {
 			total += reading;
 		}
