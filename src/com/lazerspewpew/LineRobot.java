@@ -21,8 +21,54 @@ public class LineRobot extends Robot {
 		rightMotor = new NXTMotor(rightMotorPort);
 		leftSensor = new NormalizedLightSensor(leftSensorPort);
 		rightSensor = new NormalizedLightSensor(rightSensorPort);
+		calibrateLightSensors(); // calibrira, in nastavi delovanje na staticno normalizacijo
+		Button.waitForAnyPress(); // FIXME: preveri ali se pravilno kalibrira. Nato izbrisi;
 		setMaxPower(maxPower);
 		setupPID(-maxPower, maxPower);
+	}
+
+	private calibrateLightSensors() {
+		int boundingMaxLeft = 0;
+		int boundingMinLeft = 9999;
+		int boundingMaxRight = 0;
+		int boundingMinRight = 9999;
+
+		int stMeritev = 10;
+
+		LCD.drawString("Postavi na crno crto", 0, 0);
+		Button.waitForAnyPress();
+		LCD.drawString("Meljem podatke", 0, 1);
+		for (int i = 0; i < stMeritev; i++) {
+			int rawValueLeft = leftSensor.getLightValue();
+			int rawValueRight = rightSensor.getLightValue();
+			if(rawValueLeft > boundingMaxLeft)
+				boundingMaxLeft = rawValueLeft;
+			if(rawValueRight > boundingMaxRight)
+				boundingMaxRight = rawValueRight;
+		}
+		Sound.beep();
+
+		LCD.clear();
+
+		LCD.drawString("Postavi na belo poglago", 0, 0);
+		Button.waitForAnyPress();
+		LCD.drawString("Meljem podatke", 0, 1);
+		for (int i = 0; i < stMeritev; i++) {
+			int rawValueLeft = leftSensor.getLightValue();
+			int rawValueRight = rightSensor.getLightValue();
+			if(rawValueLeft < boundingMinLeft)
+				boundingMinLeft = rawValueLeft;
+			if(rawValueRight < boundingMinRight)
+				boundingMinRight = rawValueRight;
+		}
+		Sound.beep();
+
+		LCD.clear();
+		LCD.drawString("Left: [" + boundingMinLeft +","+boundingMaxLeft+" ]", 0, 0);
+		LCD.drawString("Right: [" + boundingMinRight +","+boundingMaxRight+" ]", 0, 1);
+		
+		leftSensor.setFixedBoundaries(boundingMinLeft, boundingMaxLeft);
+		rightSensor.setFixedBoundaries(boundingMinRight, boundingMaxRight);
 	}
 	
 	public void steer(int difference) {

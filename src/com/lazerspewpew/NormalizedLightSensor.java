@@ -86,6 +86,15 @@ public class NormalizedLightSensor extends LightSensor {
 		this.boundingMax = boundingMax;
 	}
 
+	/*
+	Nastavi normalizacijo na staticno, na podane meje.
+	*/
+	public setFixedBoundaries(int boundingMin, int boundingMax){
+		this.normalizeToFixedBoundaries = true;
+		this.boundingMin = boundingMin;
+		this.boundingMax = boundingMax;
+	}
+
 	/* 
 	* Vrne verndost, ki je normalizirana (lokalno), a primerljiva z metrivam drugega senzorja.
 	* Normlizira normalizirano vrednost na interval, ki je lahko dinamicen ali staticen 
