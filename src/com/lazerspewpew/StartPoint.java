@@ -9,35 +9,29 @@ import lejos.util.Delay;
 public class StartPoint {
 
 	public static void main(String[] args) {
-		/* gluh je ime bricka, ki mu NE dela ekrancek. uporabil ga bom za sledenje crte in kot receiverja, ker ga kot initiatorja ne morem,
-		 * ker ne morem dodati drugega bricka na slepo pod known devices. pedro, ti bos verjetno uporabljal drug brick za sledenje zidu.
-		 * uredi tale starting point in zakomentiraj bluetooth povezovanje. */
-		
-		if (Bluetooth.getFriendlyName().equals("slep")) {
-			
+		//SPREMENJENO IME
+		//SPREMENJENO IME
+		if (Bluetooth.getFriendlyName().equals("Crta")) {
 			int robotPower = 95;
-			
-			ActiveRobot lineFollower = new ActiveRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower, true);
-			
-			lineFollower.actAsReceiver();
+			LineRobot crta = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
+			crta.actAsReceiver();
 			LCD.clear();
-			LCD.drawString("Ready.", 0, 0);
+			LCD.drawString("Ready when you are.", 0, 0);
 			Button.waitForAnyPress();
 			LCD.clear();
-			// lineFollower.followLine();
-			lineFollower.followWall();
-			//lineFollower.goStraight();
+			crta.followLine();
 		}
-		
-		else if (Bluetooth.getFriendlyName().equals("gluh")) {
-			FollowerRobot robotFollower = new FollowerRobot(MotorPort.A, MotorPort.B);
-			LCD.drawString(Bluetooth.getFriendlyName() + ". Press button to connect.", 0, 0);
-			
+		//SPREMENJENO IME
+		//SPREMENJENO IME
+		else if (Bluetooth.getFriendlyName().equals("Zid")) {
+			int robotPower = 95;
+			WallRobot zid = new WallRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
+			LCD.drawString("Press and I shall connect.", 0, 0);
 			Button.waitForAnyPress(); // pocakaj s pritiskom gumba, dokler drug robot ni odprt za connection
 			LCD.clear();
-			robotFollower.connectToRemote("slep");
-			robotFollower.follow();
-			//robotFollower.test();
+			zid.connectToRemote("Crta");
+			Delay.msDelay(2000);
+			zid.follow();
 			
 		}
 	}

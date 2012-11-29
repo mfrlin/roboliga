@@ -6,6 +6,7 @@ import java.io.IOException;
 import javax.bluetooth.RemoteDevice;
 
 import lejos.nxt.LCD;
+import lejos.nxt.NXTMotor;
 import lejos.nxt.Sound;
 import lejos.nxt.comm.Bluetooth;
 import lejos.nxt.comm.NXTConnection;
@@ -16,6 +17,8 @@ public class Robot {
 	protected DataInputStream inputStream;
 	protected DataOutputStream outputStream;
 	protected int maxPower;
+	protected NXTMotor leftMotor;
+	protected NXTMotor rightMotor;
 	
 	public void setMaxPower(int power) {
 		maxPower = power;
@@ -87,5 +90,32 @@ public class Robot {
 	
 	public int receiveInt() throws IOException {
 		return inputStream.readInt();
+	}
+	public boolean sendData(int zaporednaStevilka, int timeChange, int sensorReading){
+		try {
+			outputStream.write(zaporednaStevilka);
+			outputStream.write(timeChange);
+			outputStream.write(sensorReading);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		return true;
+	}
+	public boolean sendData(int zaporednaStevilka, int timeChange, int sensorReadingRight, int sensorReadingFront){
+		
+		return true;
+	}
+
+	
+	public void steer(int difference) {
+		if (difference >= 0) { // turn right or go straight
+			leftMotor.setPower(maxPower);
+			rightMotor.setPower(maxPower - difference);
+		}
+		else { // turn left
+			leftMotor.setPower(maxPower + difference);
+			rightMotor.setPower(maxPower);
+		}
 	}
 }
