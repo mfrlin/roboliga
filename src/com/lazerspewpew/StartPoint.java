@@ -13,32 +13,28 @@ public class StartPoint {
 		 * ker ne morem dodati drugega bricka na slepo pod known devices. pedro, ti bos verjetno uporabljal drug brick za sledenje zidu.
 		 * uredi tale starting point in zakomentiraj bluetooth povezovanje. */
 		
-		if (Bluetooth.getFriendlyName().equals("slep")) {
+		if (Bluetooth.getFriendlyName().equals("gluh")) {
 			
 			int robotPower = 95;
 			
-			ActiveRobot lineFollower = new ActiveRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower, true);
-			
+			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
 			lineFollower.actAsReceiver();
-			LCD.clear();
 			LCD.drawString("Ready.", 0, 0);
 			Button.waitForAnyPress();
 			LCD.clear();
-			// lineFollower.followLine();
-			lineFollower.followWall();
-			//lineFollower.goStraight();
+			lineFollower.followLine();
 		}
 		
-		else if (Bluetooth.getFriendlyName().equals("gluh")) {
-			FollowerRobot robotFollower = new FollowerRobot(MotorPort.A, MotorPort.B);
-			LCD.drawString(Bluetooth.getFriendlyName() + ". Press button to connect.", 0, 0);
+		else if (Bluetooth.getFriendlyName().equals("slep")) {
 			
+			int robotPower = 95;
+			
+			WallRobot wallFollower = new WallRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
+			LCD.drawString(Bluetooth.getFriendlyName() + ". Press to connect.", 0, 0);
 			Button.waitForAnyPress(); // pocakaj s pritiskom gumba, dokler drug robot ni odprt za connection
 			LCD.clear();
-			robotFollower.connectToRemote("slep");
-			robotFollower.follow();
-			//robotFollower.test();
-			
+			wallFollower.connectToRemote("gluh");
+			wallFollower.followWall();
 		}
 	}
 }

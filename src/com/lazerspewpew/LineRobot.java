@@ -41,13 +41,13 @@ public class LineRobot extends Robot {
 	}
 	
 	public void followLine() {
-		int read, steer;
+		int read, difference;
 		long now, timeChange;
 		
 		while(true) {
 			read = getSensorReadings(); 
-			steer = (int)myPID.compute(read, 0);
-			steer(steer);
+			difference = (int)myPID.compute(read, 0);
+			steer(difference);
 			// pošiljanje podatkov
 			/*now = System.currentTimeMillis();
 			timeChange = now - lastSend;
@@ -55,6 +55,15 @@ public class LineRobot extends Robot {
 				sendTachoCounts();
 				lastSend = now;
 			}*/
+			boolean lineEnd = false;
+			if (lineEnd) {
+				try {
+					outputStream.writeInt(1);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
