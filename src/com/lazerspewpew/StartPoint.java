@@ -13,11 +13,11 @@ public class StartPoint {
 		 * ker ne morem dodati drugega bricka na slepo pod known devices. pedro, ti bos verjetno uporabljal drug brick za sledenje zidu.
 		 * uredi tale starting point in zakomentiraj bluetooth povezovanje. */
 		
-		if (Bluetooth.getFriendlyName().equals("gluh")) {
+		if (Bluetooth.getFriendlyName().equals("Crta")) {
 			
 			int robotPower = 95;
 			
-			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
+			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S2, SensorPort.S3, robotPower);
 			lineFollower.actAsReceiver();
 			LCD.drawString("Ready.", 0, 0);
 			Button.waitForAnyPress();
@@ -25,7 +25,7 @@ public class StartPoint {
 			lineFollower.followLine();
 		}
 		
-		else if (Bluetooth.getFriendlyName().equals("slep")) {
+		else if (Bluetooth.getFriendlyName().equals("Zid")) {
 			
 			int robotPower = 95;
 			
@@ -33,7 +33,7 @@ public class StartPoint {
 			LCD.drawString(Bluetooth.getFriendlyName() + ". Press to connect.", 0, 0);
 			Button.waitForAnyPress(); // pocakaj s pritiskom gumba, dokler drug robot ni odprt za connection
 			LCD.clear();
-			wallFollower.connectToRemote("gluh");
+			wallFollower.connectToRemote("Crta");
 			wallFollower.followWall();
 		}
 	}

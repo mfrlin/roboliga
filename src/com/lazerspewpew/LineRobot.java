@@ -1,9 +1,12 @@
 package com.lazerspewpew;
 import java.io.IOException;
 
+import lejos.nxt.Button;
+import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTMotor;
 import lejos.nxt.SensorPort;
+import lejos.nxt.Sound;
 import lejos.util.Delay;
 
 public class LineRobot extends Robot {
@@ -27,7 +30,7 @@ public class LineRobot extends Robot {
 		setupPID(-maxPower, maxPower);
 	}
 
-	private calibrateLightSensors() {
+	private void calibrateLightSensors() {
 		int boundingMaxLeft = 0;
 		int boundingMinLeft = 9999;
 		int boundingMaxRight = 0;

@@ -89,7 +89,7 @@ public class NormalizedLightSensor extends LightSensor {
 	/*
 	Nastavi normalizacijo na staticno, na podane meje.
 	*/
-	public setFixedBoundaries(int boundingMin, int boundingMax){
+	public void setFixedBoundaries(int boundingMin, int boundingMax){
 		this.normalizeToFixedBoundaries = true;
 		this.boundingMin = boundingMin;
 		this.boundingMax = boundingMax;
