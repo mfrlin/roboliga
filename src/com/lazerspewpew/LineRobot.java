@@ -41,23 +41,28 @@ public class LineRobot extends Robot {
 		long now, lastSend = System.currentTimeMillis();
 		int iterCounter = 1;
 		int frekvencaPosiljanja = 1000;
+		//int[] arr = new int[frekvencaPosiljanja];
 		while(true) {
 			read = getSensorReadings();
-			iterCounter = iterCounter + 1; 
+			iterCounter++;
 			// pošiljanje podatkov
 			if((iterCounter % frekvencaPosiljanja) == 0) {//pošilja vsako pol sekunde, i.e. 100*5ms = pol sekunde, hardcodano
+				
+				sequenceNumber = (iterCounter / frekvencaPosiljanja) - 1;
 				now = System.currentTimeMillis();
 				timeChange = (int) (now - lastSend);
 				lastSend = (int) now;
+				sendData(sequenceNumber, timeChange, read);
+				/*
 				LCD.drawInt(333,0,0);
 				LCD.drawInt(444,0,1);
 				LCD.drawInt(555,0,2);
-				//LCD.drawInt((iterCounter / 100) - 1,0,0);
-				//LCD.drawInt(timeChange,0,1);
-				//LCD.drawInt(read,0,2);
-				//sequenceNumber = (iterCounter / frekvencaPosiljanja) - 1;
-				//sendData(sequenceNumber, timeChange, read);
 				sendData(333, 444, 555);
+				
+				LCD.drawInt((iterCounter / 100) - 1,0,0);
+				LCD.drawInt(timeChange,0,1);
+				LCD.drawInt(read,0,2);
+				*/
 			}
 			steer = (int)myPID.compute(read, 0);
 			steer(steer);

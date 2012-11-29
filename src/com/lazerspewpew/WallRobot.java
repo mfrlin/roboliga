@@ -14,7 +14,6 @@ import lejos.util.Delay;
 public class WallRobot extends Robot {
 	private UltrasonicSensor usFrontSensor;
 	private UltrasonicSensor usRightSensor;
-	private PID myPID;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
 	private int wallFrontDistance; /* Kdaj reagira ko zazna zid spredaj */
 	
@@ -34,11 +33,20 @@ public class WallRobot extends Robot {
 		int lastSequenceNumber = -1;
 		int currentSequencelNumber = 0, timeChange = 0, read = 0, steer;
 		while(true){
-			
+			LCD.clear();
 			try {
-				currentSequencelNumber = inputStream.readInt();
-				timeChange = inputStream.readInt();
-				read = inputStream.readInt();
+				LCD.drawInt(inputStream.available(), 0, 0);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				Sound.buzz();
+				Sound.buzz();
+			}
+			try {
+				//if(inputStream.available()>0){
+					currentSequencelNumber = inputStream.readInt();
+					timeChange = inputStream.readInt();
+					read = inputStream.readInt();
+				//}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -56,8 +64,12 @@ public class WallRobot extends Robot {
 				LCD.drawString("Press to exit",0,1);
 				Button.waitForAnyPress();
 			}
+			Sound.beepSequence();
+			if(myPID == null) Sound.buzz();
 			steer = (int)myPID.compute(read, 0);
+			Sound.beepSequenceUp();
 			steer(steer);
+			Sound.buzz();
 		}
 	}
 }
