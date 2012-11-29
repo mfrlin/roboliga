@@ -36,7 +36,6 @@ public class LineRobot extends Robot {
 	
 	public void followLine() {
 		//DataOutputStream dos = createDos();
-
 		int read, steer, timeChange, sequenceNumber;
 		long now, lastSend = System.currentTimeMillis();
 		int iterCounter = 1;
