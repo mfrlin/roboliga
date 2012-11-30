@@ -1,6 +1,13 @@
 package com.lazerspewpew;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.File;
 
+import lejos.internal.charset.CharsetDecoder;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
@@ -8,7 +15,7 @@ import lejos.nxt.NXTMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Sound;
 import lejos.util.Delay;
-
+import java.io.*;
 public class LineRobot extends Robot {
 	private NXTMotor leftMotor;
 	private NXTMotor rightMotor;
@@ -27,7 +34,6 @@ public class LineRobot extends Robot {
 		setMaxPower(maxPower);
 		setupPID(-maxPower, maxPower);
 		calibrateLightSensors(); // calibrira, in nastavi delovanje na staticno normalizacijo
-		Button.waitForAnyPress(); // FIXME: preveri ali se pravilno kalibrira. Nato izbrisi;
 	}
 
 	private void calibrateLightSensors() {
@@ -35,7 +41,7 @@ public class LineRobot extends Robot {
 		int boundingMinLeft = 9999;
 		int boundingMaxRight = 0;
 		int boundingMinRight = 9999;
-
+		int storePower;
 		
 
 		LCD.clear();
@@ -60,24 +66,28 @@ public class LineRobot extends Robot {
 			boundingMaxRight = (rightTemp > boundingMaxRight) ? rightTemp : boundingMaxRight;
 		}
 		LCD.clear();
-		leftMotor.stop();
-		rightMotor.stop();
+		storePower = leftMotor.getPower();
+		if(leftMotor.getPower() != rightMotor.getPower()) System.exit(1);
+		leftMotor.setPower(0);
+		rightMotor.setPower(0);
 		LCD.drawString("Levi:  ["+boundingMinLeft+", "+boundingMaxLeft+"]",0,0);
 		LCD.drawString("Desni: ["+boundingMinRight+", "+boundingMaxRight+"]",0,1);
-		Delay.msDelay(1000);
+		Delay.msDelay(2000);
 		leftSensor.setFixedBoundaries(boundingMinLeft, boundingMaxLeft);
 		rightSensor.setFixedBoundaries(boundingMinRight, boundingMaxRight);
+		LCD.clear();
+		LCD.drawString("Ready to go.", 0, 0);
+		Button.waitForAnyPress();
+		leftMotor.setPower(storePower);
+		rightMotor.setPower(storePower);
 	}
 	
 	public void steer(int difference) {
-		if (difference >= 0) { // turn right or go straight
-			leftMotor.setPower(maxPower);
-			rightMotor.setPower(maxPower - difference);
-		}
-		else { // turn left
-			leftMotor.setPower(maxPower + difference);
-			rightMotor.setPower(maxPower);
-		}
+		int leftPower, rightPower;
+		leftPower = (difference >= 0) ? maxPower : maxPower + difference;
+		rightPower = (difference >= 0) ? maxPower - difference : maxPower;
+		leftMotor.setPower(leftPower);
+		rightMotor.setPower(rightPower);
 	}
 	
 	public int getSensorReadings() {
@@ -97,35 +107,76 @@ public class LineRobot extends Robot {
 	}
 	
 	public void followLine() {
-		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000;
+		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000, arrSum, read, difference;
 		int[] arr = new int[parameter];
-		int read, difference;
+		DataOutputStream dos = createDataOutputStream("izpisRazlik.dat");
 		for(int i=0;i<parameter;i++){
-			arr[i] = getSensorReadings();
-			difference = (int)myPID.compute(arr[i], 0);
+			read = getSensorReadings();
+			arr[i] = read;
+			writeIntAsString(dos,read);
+			difference = (int)myPID.compute(read, 0);
 			steer(difference);
+			Delay.msDelay(5);
 		}
+		writeIntAsString(dos,111111);
+		writeIntAsString(dos,sum(arr));
+		flushAndClose(dos);
+		Sound.beepSequenceUp();
+		Sound.beepSequence();
 		while(true) {
 			read = getSensorReadings(); 
-			arr[count%100] = read;
-			difference = (int)myPID.compute(read, 0);
+			arr[++count%100] = read;
 			if(count % 10 == 0) {
-				LCD.drawInt(difference, 0, 0);
-				Sound.twoBeeps();
+				arrSum = sum(arr);
+				LCD.clear();
+				LCD.drawInt(read, 0, 0);
+				LCD.drawInt(arrSum, 0, 1);
+				if(arrSum<parameter2){
+					leftMotor.stop();
+					rightMotor.stop();
+					Delay.msDelay(10000000);
+				}
 			}
-			if(sum(arr)>parameter2){
-				Sound.beepSequence();
-				Sound.beepSequenceUp();
-			}
+			difference = (int)myPID.compute(read, 0);
 			steer(difference);
+			Delay.msDelay(5);
 		}
 	}
+	private void flushAndClose(DataOutputStream dos) {
+		try {
+			dos.flush();
+			dos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private DataOutputStream createDataOutputStream(String name) {
+		DataOutputStream dos = null;
+		try {
+			dos = new DataOutputStream(new FileOutputStream(new File(name)));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		return dos;
+	}
+
 	public int sum(int[] arr){
 		int temp = 0;
 		for(int i=0;i<arr.length;i++){
-			temp += arr[i];
+			temp += Math.abs(arr[i]);
+			//temp += 5;
 		}
 		return temp;
+	}
+	public void writeIntAsString(DataOutputStream dos, int difference){
+		try {
+			String a = new Integer(difference).toString();
+			dos.writeBytes(a+"\n");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
