@@ -16,13 +16,18 @@ public class LineRobot extends Robot {
 	private NXTMotor rightMotor;
 	private NormalizedLightSensor leftSensor;
 	private NormalizedLightSensor rightSensor; 
-	private int[] sensorDifferences = new int[10]; // Steivlo elementov naj bo SODO. Array za shranjevanje getSensorReadings().;
-	private int arraySDCounter = 0; // index zadnjega shranjenega elementa v sensorDifferences
+	private int[] sensorMinValuesHistory = new int[10]; // Steivlo elementov naj bo SODO. Array za shranjevanje getSensorReadings().;
+	private int sensorMinValuesCounter = 0; // index zadnjega shranjenega elementa v sensorDifferences
+	
+	private int[] steeringHistory = new int[10]; // Steivlo elementov naj bo SODO. Array za shranjevanje getSensorReadings().;
+	private int steeringHistoryCounter = 0; // index zadnjega shranjenega elementa v sensorDifferences
+	private double reducedPower = 1;
 //	private boolean lineEnd = false;
 	//private long lastSend;
 	//private long sendInterval = 500;
 	
-	private long lastTime = System.currentTimeMillis(); // za omejevanje stevila podatkov v sensorDifferences
+	private long lastTimeLineEnd = System.currentTimeMillis(); // za omejevanje stevila podatkov v sensorMinValuesHistory
+	private long lastTimeSlowDown = System.currentTimeMillis(); // za omejevanje stevila podatkov v steeringHistory
 	
 	public LineRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
@@ -34,8 +39,8 @@ public class LineRobot extends Robot {
 		calibrateLightSensors(); // calibrira, in nastavi delovanje na staticno normalizacijo
 		
 		// Prednapolni sensorDifferences
-		for (int i = 0; i < sensorDifferences.length; i++) {
-			sensorDifferences[i] = 0;
+		for (int i = 0; i < sensorMinValuesHistory.length; i++) {
+			sensorMinValuesHistory[i] = 0;
 		}
 	}
 
@@ -86,6 +91,19 @@ public class LineRobot extends Robot {
 		int leftPower, rightPower;
 		leftPower = (difference >= 0) ? maxPower : maxPower + difference;
 		rightPower = (difference >= 0) ? maxPower - difference : maxPower;
+		
+		LCD.drawInt(leftPower, 0, 0);
+		LCD.drawInt(rightPower, 0, 1);
+		LCD.drawString(">", 3, 0);
+		LCD.drawString(">", 3, 1);
+		LCD.drawInt((int) ((1-reducedPower)*leftPower), 8, 0);
+		LCD.drawInt((int) ((1-reducedPower)*rightPower), 8, 1);
+		// Reduce power if we are in a curve; Set in slowDownOnCurves.
+		leftPower *= reducedPower;
+		rightPower *= reducedPower;
+		LCD.drawInt(leftPower, 5, 0);
+		LCD.drawInt(rightPower, 5, 1);
+		
 		leftMotor.setPower(leftPower);
 		rightMotor.setPower(rightPower);
 	}
@@ -96,22 +114,24 @@ public class LineRobot extends Robot {
 		
 		detectLineEnd(leftReading, rightReading);
 		
+		slowDownOnCurves(leftReading, rightReading);
+		
 		return rightReading - leftReading;
 	}
 	
 	private void detectLineEnd(int leftReading, int rightReading) {
-		int sampleDelta = (int)(1000 / sensorDifferences.length); // only accept data every sampleDelta ms. Will stop in 1 second.
-		sampleDelta = (int)(sampleDelta / 5);
-		int thresh = sensorDifferences.length * 70;
+		int sampleDelta = (int)(1000 / sensorMinValuesHistory.length); // only accept data every sampleDelta ms. Will stop in 1 second.
+		sampleDelta = (int)(sampleDelta / 2);
+		int thresh = sensorMinValuesHistory.length * 70;
 		
 		long now = System.currentTimeMillis();
 		
-		if(now - lastTime >= sampleDelta){
-			lastTime = now;
+		if(now - lastTimeLineEnd >= sampleDelta){
+			lastTimeLineEnd = now;
 			
-			sensorDifferences[getArraySDCounter()] = Math.min(rightReading, leftReading);
+			sensorMinValuesHistory[getSensorMinValuesCounter()] = Math.min(rightReading, leftReading);
 			
-			int sum = absoluteSum(sensorDifferences);
+			int sum = absoluteSum(sensorMinValuesHistory);
 //			LCD.clear();
 //			LCD.drawInt(sum, 0, 0);
 //			LCD.drawInt(thresh, 0, 1);
@@ -130,10 +150,45 @@ public class LineRobot extends Robot {
 			}
 		}
 	}
+	
+	private void slowDownOnCurves(int leftReading, int rightReading) {
+		int sampleDelta = (int)(1000 / steeringHistory.length); // only accept data every sampleDelta ms.
+		sampleDelta = (int)(sampleDelta / 2);
+		int thresh = steeringHistory.length * 20;
+		double acceleration = 0.05; // should be a fraction of 1.
+		
+		long now = System.currentTimeMillis();
+		
+		if(now - lastTimeSlowDown >= sampleDelta){
+			lastTimeSlowDown = now;
+			
+			// Store the difference into history array
+			steeringHistory[getSteeringHistoryCounter()] = rightReading-leftReading;
+			
+			int sum = absoluteSum(steeringHistory);
+			LCD.clear();
+			LCD.drawInt(sum, 0, 6);
+			LCD.drawInt(thresh, 0, 7);
+			
+			if(sum > thresh){
+				LCD.drawString("SLOW", 0, 4);
+//				Sound.twoBeeps();
+				reducedPower -= (reducedPower - 0.5) * acceleration; // 0.5 mean a reduction of up to 50% in speed.
+			}else{
+				reducedPower += (1 - reducedPower) * acceleration;
+			}
+			
+		}
+	}
 
-	private int getArraySDCounter() {
-		arraySDCounter = arraySDCounter < sensorDifferences.length-1 ? arraySDCounter + 1 : 0;
-		return arraySDCounter;
+	private int getSensorMinValuesCounter() {
+		sensorMinValuesCounter = sensorMinValuesCounter < sensorMinValuesHistory.length-1 ? sensorMinValuesCounter + 1 : 0;
+		return sensorMinValuesCounter;
+	}
+
+	private int getSteeringHistoryCounter() {
+		steeringHistoryCounter = steeringHistoryCounter < steeringHistory.length - 1 ? steeringHistoryCounter + 1 : 0;
+		return steeringHistoryCounter;
 	}
 
 	private static int absoluteSum(int[] array) {
