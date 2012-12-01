@@ -21,8 +21,8 @@ public class LineRobot extends Robot {
 	private NXTMotor rightMotor;
 	private NormalizedLightSensor leftSensor;
 	private NormalizedLightSensor rightSensor;
-	private int[] readingsArray = new int[5];
-	private boolean lineEnd = false;
+	private int[] sensorMeasurements = new int[100];
+//	private boolean lineEnd = false;
 	//private long lastSend;
 	//private long sendInterval = 500;
 	
@@ -72,11 +72,9 @@ public class LineRobot extends Robot {
 		rightMotor.setPower(0);
 		LCD.drawString("Levi:  ["+boundingMinLeft+", "+boundingMaxLeft+"]",0,0);
 		LCD.drawString("Desni: ["+boundingMinRight+", "+boundingMaxRight+"]",0,1);
-		Delay.msDelay(2000);
 		leftSensor.setFixedBoundaries(boundingMinLeft, boundingMaxLeft);
 		rightSensor.setFixedBoundaries(boundingMinRight, boundingMaxRight);
-		LCD.clear();
-		LCD.drawString("Ready to go.", 0, 0);
+		LCD.drawString("Ready to go.", 0, 2);
 		Button.waitForAnyPress();
 		leftMotor.setPower(storePower);
 		rightMotor.setPower(storePower);
@@ -93,55 +91,70 @@ public class LineRobot extends Robot {
 	public int getSensorReadings() {
 		int leftReading = leftSensor.getValue();
 		int rightReading = rightSensor.getValue();
-		int arrayCounter = 0;
-		int total = 0;
+//		int arrayCounter = 0;
+//		int total = 0;
 		//readingsArray[arrayCounter % readingsArray.length] = rightReading + leftReading;
-		readingsArray[arrayCounter % readingsArray.length] = (rightReading > leftReading) ? rightReading : leftReading;
-		for (int reading : readingsArray) {
-			total += reading;
-		}
-		if (total < 50) { // this number needs tweaking
-			lineEnd = true;
-		}
+//		readingsArray[arrayCounter % readingsArray.length] = (rightReading > leftReading) ? rightReading : leftReading;
+//		for (int reading : readingsArray) {
+//			total += reading;
+//		}
+//		if (total < 50) { // this number needs tweaking
+//			lineEnd = true;
+//		}
+		
+//		detectLineEnd(leftReading, rightReading);
+		
+		LCD.clear();
+		LCD.drawInt(rightReading-leftReading, 0, 0);
+		
 		return rightReading - leftReading;
 	}
 	
+	private void detectLineEnd(int leftReading, int rightReading) {
+		
+		
+//		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000, arrSum, read, difference;
+//		int[] arr = new int[parameter];
+//		DataOutputStream dos = createDataOutputStream("izpisRazlik.dat");
+//		for(int i=0;i<parameter;i++){
+//			read = getSensorReadings();
+//			arr[i] = read;
+//			writeIntAsString(dos,read);
+//			difference = (int)myPID.compute(read, 0);
+//			steer(difference);
+//			Delay.msDelay(5);
+//		}
+//		writeIntAsString(dos,111111);
+//		writeIntAsString(dos,sum(arr));
+//		flushAndClose(dos);
+//		Sound.beepSequenceUp();
+//		Sound.beepSequence();
+//		read = rightReading - leftReading;
+//		arr[++count%100] = read; //getSensorReadings()
+//		if(count % 10 == 0) {
+//			arrSum = sum(arr);
+//			LCD.clear();
+//			LCD.drawInt(read, 0, 0);
+//			LCD.drawInt(arrSum, 0, 1);
+//			if(arrSum<parameter2){
+//				leftMotor.stop();
+//				rightMotor.stop();
+//				Delay.msDelay(10000000);
+//			}
+//		}
+		
+	}
+
 	public void followLine() {
-		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000, arrSum, read, difference;
-		int[] arr = new int[parameter];
-		DataOutputStream dos = createDataOutputStream("izpisRazlik.dat");
-		for(int i=0;i<parameter;i++){
-			read = getSensorReadings();
-			arr[i] = read;
-			writeIntAsString(dos,read);
-			difference = (int)myPID.compute(read, 0);
-			steer(difference);
-			Delay.msDelay(5);
-		}
-		writeIntAsString(dos,111111);
-		writeIntAsString(dos,sum(arr));
-		flushAndClose(dos);
-		Sound.beepSequenceUp();
-		Sound.beepSequence();
+		int read, steer;
 		while(true) {
-			read = getSensorReadings(); 
-			arr[++count%100] = read;
-			if(count % 10 == 0) {
-				arrSum = sum(arr);
-				LCD.clear();
-				LCD.drawInt(read, 0, 0);
-				LCD.drawInt(arrSum, 0, 1);
-				if(arrSum<parameter2){
-					leftMotor.stop();
-					rightMotor.stop();
-					Delay.msDelay(10000000);
-				}
-			}
-			difference = (int)myPID.compute(read, 0);
-			steer(difference);
-			Delay.msDelay(5);
+			read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
+			steer = (int)myPID.compute(read, 0);
+			steer(steer);
 		}
 	}
+	
+	
 	private void flushAndClose(DataOutputStream dos) {
 		try {
 			dos.flush();

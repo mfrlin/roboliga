@@ -2,7 +2,9 @@ RoboLiga - Lazers, pew pew
 
 Ideje:
     ❍ upocasni v ovinku -> shranjuj podatke in ce abs(sum) > alpha zmanjsaj hitrost
-    ☐ Normaliziraj moc motorjev, ker je eden obcutno mocnejsi od drugega.
+    ☐ ustavi na koncu crte 
+    ☐ Preveri wall following
+    ☐ Poslji podatek o koncu crte woll followerju
 
 Crazy ideas:
     ❍ music playing while running
@@ -10,4 +12,5 @@ Crazy ideas:
 
 ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 Archive:
+ ✔ Normaliziraj moc motorjev, ker je eden obcutno mocnejsi od drugega. @done (12-12-01 11:45)
  ✔ normalizirati signale @done (12-11-01 22:56)
