@@ -100,8 +100,8 @@ public class LineRobot extends Robot {
 	}
 	
 	private void detectLineEnd(int leftReading, int rightReading) {
-		int sampleDelta = 1000 / sensorDifferences.length; // only accept data every sampleDelta ms. Will stop in 1 second.
-		sampleDelta *= 2;
+		int sampleDelta = (int)(1000 / sensorDifferences.length); // only accept data every sampleDelta ms. Will stop in 1 second.
+		sampleDelta = (int)(sampleDelta / 5);
 		int thresh = sensorDifferences.length * 70;
 		
 		long now = System.currentTimeMillis();
@@ -109,16 +109,13 @@ public class LineRobot extends Robot {
 		if(now - lastTime >= sampleDelta){
 			lastTime = now;
 			
-//			int difference = rightReading - leftReading;
 			sensorDifferences[getArraySDCounter()] = Math.min(rightReading, leftReading);
 			
-////			Sound.beep();Sound.beep();Sound.beep();Delay.msDelay(500);
 			int sum = absoluteSum(sensorDifferences);
-			LCD.clear();
-			LCD.drawInt(sum, 0, 0);
-			LCD.drawInt(thresh, 0, 1);
+//			LCD.clear();
+//			LCD.drawInt(sum, 0, 0);
+//			LCD.drawInt(thresh, 0, 1);
 			
-//			
 			if(sum > thresh){
 				LCD.drawString("STOP", 0, 3);
 				Sound.beep();
@@ -130,42 +127,8 @@ public class LineRobot extends Robot {
 				rightMotor.forward();
 				leftMotor.setPower(Math.max(leftMotor.getPower(), 20));
 				rightMotor.setPower(Math.max(rightMotor.getPower(), 20));
-				
 			}
-			
-			
 		}
-		
-//		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000, arrSum, read, difference;
-//		int[] arr = new int[parameter];
-//		DataOutputStream dos = createDataOutputStream("izpisRazlik.dat");
-//		for(int i=0;i<parameter;i++){
-//			read = getSensorReadings();
-//			arr[i] = read;
-//			writeIntAsString(dos,read);
-//			difference = (int)myPID.compute(read, 0);
-//			steer(difference);
-//			Delay.msDelay(5);
-//		}
-//		writeIntAsString(dos,111111);
-//		writeIntAsString(dos,sum(arr));
-//		flushAndClose(dos);
-//		Sound.beepSequenceUp();
-//		Sound.beepSequence();
-//		read = rightReading - leftReading;
-//		arr[++count%100] = read; //getSensorReadings()
-//		if(count % 10 == 0) {
-//			arrSum = sum(arr);
-//			LCD.clear();
-//			LCD.drawInt(read, 0, 0);
-//			LCD.drawInt(arrSum, 0, 1);
-//			if(arrSum<parameter2){
-//				leftMotor.stop();
-//				rightMotor.stop();
-//				Delay.msDelay(10000000);
-//			}
-//		}
-		
 	}
 
 	private int getArraySDCounter() {
