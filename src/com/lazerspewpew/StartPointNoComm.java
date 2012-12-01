@@ -13,7 +13,7 @@ public class StartPointNoComm {
 	public static void main(String[] args) {
 		int robotPower = 40;
 		LineRobot crta = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
-		LCD.clear();
+		Button.waitForAnyPress();
 		crta.followLine();
 	}
 }

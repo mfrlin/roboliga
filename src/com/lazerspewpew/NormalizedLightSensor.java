@@ -165,4 +165,8 @@ public class NormalizedLightSensor extends LightSensor {
 		/* Normaliziraj meritve na nove meje */
 		return normalizeValueToStaticBounds(rawValue);
 	}
+	
+	public int getBoundingMin(){
+		return this.boundingMin;
+	}
 }

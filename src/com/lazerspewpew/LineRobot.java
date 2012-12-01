@@ -1,13 +1,9 @@
 package com.lazerspewpew;
-import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.File;
-
-import lejos.internal.charset.CharsetDecoder;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
@@ -15,16 +11,18 @@ import lejos.nxt.NXTMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Sound;
 import lejos.util.Delay;
-import java.io.*;
 public class LineRobot extends Robot {
 	private NXTMotor leftMotor;
 	private NXTMotor rightMotor;
 	private NormalizedLightSensor leftSensor;
-	private NormalizedLightSensor rightSensor;
-	private int[] sensorMeasurements = new int[100];
+	private NormalizedLightSensor rightSensor; 
+	private int[] sensorDifferences = new int[10]; // array za shranjevanje getSensorReadings();
+	private int arraySDCounter = 0; // Steivlo elementov naj bo SODO.
 //	private boolean lineEnd = false;
 	//private long lastSend;
 	//private long sendInterval = 500;
+	
+	private long lastTime = System.currentTimeMillis(); // za omejevanje stevila podatkov v sensorDifferences
 	
 	public LineRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort leftSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
@@ -34,6 +32,11 @@ public class LineRobot extends Robot {
 		setMaxPower(maxPower);
 		setupPID(-maxPower, maxPower);
 		calibrateLightSensors(); // calibrira, in nastavi delovanje na staticno normalizacijo
+		
+		// Prednapolni sensorDifferences
+		for (int i = 0; i < sensorDifferences.length; i++) {
+			sensorDifferences[i] = 999;
+		}
 	}
 
 	private void calibrateLightSensors() {
@@ -75,9 +78,8 @@ public class LineRobot extends Robot {
 		leftSensor.setFixedBoundaries(boundingMinLeft, boundingMaxLeft);
 		rightSensor.setFixedBoundaries(boundingMinRight, boundingMaxRight);
 		LCD.drawString("Ready to go.", 0, 2);
-		Button.waitForAnyPress();
-		leftMotor.setPower(storePower);
-		rightMotor.setPower(storePower);
+//		leftMotor.setPower(storePower);
+//		rightMotor.setPower(storePower);
 	}
 	
 	public void steer(int difference) {
@@ -91,27 +93,42 @@ public class LineRobot extends Robot {
 	public int getSensorReadings() {
 		int leftReading = leftSensor.getValue();
 		int rightReading = rightSensor.getValue();
-//		int arrayCounter = 0;
-//		int total = 0;
-		//readingsArray[arrayCounter % readingsArray.length] = rightReading + leftReading;
-//		readingsArray[arrayCounter % readingsArray.length] = (rightReading > leftReading) ? rightReading : leftReading;
-//		for (int reading : readingsArray) {
-//			total += reading;
-//		}
-//		if (total < 50) { // this number needs tweaking
-//			lineEnd = true;
-//		}
 		
-//		detectLineEnd(leftReading, rightReading);
-		
-		LCD.clear();
-		LCD.drawInt(rightReading-leftReading, 0, 0);
+		detectLineEnd(leftReading, rightReading);
 		
 		return rightReading - leftReading;
 	}
 	
 	private void detectLineEnd(int leftReading, int rightReading) {
+		int sampleDelta = 100; // only accept data every sampleDelta ms.
+		int thresh = (int) (0.25 * sensorDifferences.length * ( 5 + Math.max(leftSensor.getBoundingMin(), rightSensor.getBoundingMin())));
 		
+		long now = System.currentTimeMillis();
+		
+		if(now - lastTime >= sampleDelta){
+			lastTime = now;
+			
+			int difference = rightReading - leftReading;
+			sensorDifferences[getArraySDCounter()] = difference;
+			
+////			Sound.beep();Sound.beep();Sound.beep();Delay.msDelay(500);
+			int sum = absoluteSum(sensorDifferences);
+			LCD.clear();
+			LCD.drawInt(sum, 0, 0);
+			LCD.drawInt(thresh, 0, 1);
+			
+//			
+			if(sum < thresh){
+//				LCD.clear();
+//				LCD.drawInt(sum, 0, 0);
+				LCD.drawString("STOP", 0, 3);
+//				leftMotor.stop();
+//				rightMotor.stop();
+//				Delay.msDelay(10000000);
+			}
+			
+			
+		}
 		
 //		int count = 0, parameter = 100, vsota = 0, parameter2 = 1000, arrSum, read, difference;
 //		int[] arr = new int[parameter];
@@ -143,6 +160,21 @@ public class LineRobot extends Robot {
 //			}
 //		}
 		
+	}
+
+	private int getArraySDCounter() {
+		arraySDCounter = arraySDCounter < sensorDifferences.length-1 ? arraySDCounter + 1 : 0;
+		return arraySDCounter;
+	}
+
+	private static int absoluteSum(int[] array) {
+		int sum = 0;
+		int len = array.length;
+		len = len%2==0 ? len - 1 : len - 2; // Ce array nima sodo stevilo elementov, enega spusti.
+		for(int i = len; i>0; i-=2){ // fastest loop
+			sum = sum + Math.abs(array[i]) + Math.abs(array[i-1]);
+		}
+		return sum;
 	}
 
 	public void followLine() {
