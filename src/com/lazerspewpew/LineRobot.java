@@ -16,8 +16,8 @@ public class LineRobot extends Robot {
 	private NXTMotor rightMotor;
 	private NormalizedLightSensor leftSensor;
 	private NormalizedLightSensor rightSensor; 
-	private int[] sensorDifferences = new int[10]; // array za shranjevanje getSensorReadings();
-	private int arraySDCounter = 0; // Steivlo elementov naj bo SODO.
+	private int[] sensorDifferences = new int[10]; // Steivlo elementov naj bo SODO. Array za shranjevanje getSensorReadings().;
+	private int arraySDCounter = 0; // index zadnjega shranjenega elementa v sensorDifferences
 //	private boolean lineEnd = false;
 	//private long lastSend;
 	//private long sendInterval = 500;
@@ -35,7 +35,7 @@ public class LineRobot extends Robot {
 		
 		// Prednapolni sensorDifferences
 		for (int i = 0; i < sensorDifferences.length; i++) {
-			sensorDifferences[i] = 999;
+			sensorDifferences[i] = 0;
 		}
 	}
 
@@ -100,16 +100,17 @@ public class LineRobot extends Robot {
 	}
 	
 	private void detectLineEnd(int leftReading, int rightReading) {
-		int sampleDelta = 100; // only accept data every sampleDelta ms.
-		int thresh = (int) (0.25 * sensorDifferences.length * ( 5 + Math.max(leftSensor.getBoundingMin(), rightSensor.getBoundingMin())));
+		int sampleDelta = 1000 / sensorDifferences.length; // only accept data every sampleDelta ms. Will stop in 1 second.
+		sampleDelta *= 2;
+		int thresh = sensorDifferences.length * 70;
 		
 		long now = System.currentTimeMillis();
 		
 		if(now - lastTime >= sampleDelta){
 			lastTime = now;
 			
-			int difference = rightReading - leftReading;
-			sensorDifferences[getArraySDCounter()] = difference;
+//			int difference = rightReading - leftReading;
+			sensorDifferences[getArraySDCounter()] = Math.min(rightReading, leftReading);
 			
 ////			Sound.beep();Sound.beep();Sound.beep();Delay.msDelay(500);
 			int sum = absoluteSum(sensorDifferences);
@@ -118,13 +119,18 @@ public class LineRobot extends Robot {
 			LCD.drawInt(thresh, 0, 1);
 			
 //			
-			if(sum < thresh){
-//				LCD.clear();
-//				LCD.drawInt(sum, 0, 0);
+			if(sum > thresh){
 				LCD.drawString("STOP", 0, 3);
-//				leftMotor.stop();
-//				rightMotor.stop();
-//				Delay.msDelay(10000000);
+				Sound.beep();
+				leftMotor.stop();
+				rightMotor.stop();
+				
+			}else{
+				leftMotor.forward();
+				rightMotor.forward();
+				leftMotor.setPower(Math.max(leftMotor.getPower(), 20));
+				rightMotor.setPower(Math.max(rightMotor.getPower(), 20));
+				
 			}
 			
 			

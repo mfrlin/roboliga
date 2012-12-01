@@ -23,7 +23,7 @@ public class Robot {
 	
 	public void setupPID(int lowerBound, int higherBound){
 //		myPID = new PID(3, 0.03, 0.03, lowerBound, higherBound);
-		myPID = new PID(1, 0.03, 0.03, lowerBound, higherBound);
+		myPID = new PID(0.6, 0.03, 0.03, lowerBound, higherBound);
 	}
 	
 	/* Tries to connect to a remote device. It takes name or address of the remote device as an argument.

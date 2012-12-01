@@ -169,4 +169,7 @@ public class NormalizedLightSensor extends LightSensor {
 	public int getBoundingMin(){
 		return this.boundingMin;
 	}
+	public int getBoundingMax(){
+		return this.boundingMax;
+	}
 }
