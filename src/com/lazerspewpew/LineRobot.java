@@ -121,7 +121,7 @@ public class LineRobot extends Robot {
 	
 	private void detectLineEnd(int leftReading, int rightReading) {
 		int sampleDelta = (int)(1000 / sensorMinValuesHistory.length); // only accept data every sampleDelta ms. Will stop in 1 second.
-		sampleDelta = (int)(sampleDelta / 2);
+		sampleDelta = (int)(sampleDelta / (3.0 * maxPower / 50.0)); // 2.0 is the scaling factor
 		int thresh = sensorMinValuesHistory.length * 70;
 		
 		long now = System.currentTimeMillis();
@@ -132,9 +132,6 @@ public class LineRobot extends Robot {
 			sensorMinValuesHistory[getSensorMinValuesCounter()] = Math.min(rightReading, leftReading);
 			
 			int sum = absoluteSum(sensorMinValuesHistory);
-//			LCD.clear();
-//			LCD.drawInt(sum, 0, 0);
-//			LCD.drawInt(thresh, 0, 1);
 			
 			if(sum > thresh){
 				LCD.drawString("STOP?", 0, 3);
