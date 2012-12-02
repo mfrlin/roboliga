@@ -92,17 +92,17 @@ public class LineRobot extends Robot {
 		leftPower = (difference >= 0) ? maxPower : maxPower + difference;
 		rightPower = (difference >= 0) ? maxPower - difference : maxPower;
 		
-		LCD.drawInt(leftPower, 0, 0);
-		LCD.drawInt(rightPower, 0, 1);
-		LCD.drawString(">", 3, 0);
-		LCD.drawString(">", 3, 1);
-		LCD.drawInt((int) ((1-reducedPower)*leftPower), 8, 0);
-		LCD.drawInt((int) ((1-reducedPower)*rightPower), 8, 1);
+//		LCD.drawInt(leftPower, 0, 0);
+//		LCD.drawInt(rightPower, 0, 1);
+//		LCD.drawString(">", 3, 0);
+//		LCD.drawString(">", 3, 1);
+//		LCD.drawInt((int) ((1-reducedPower)*leftPower), 8, 0);
+//		LCD.drawInt((int) ((1-reducedPower)*rightPower), 8, 1);
 		// Reduce power if we are in a curve; Set in slowDownOnCurves.
 		leftPower *= reducedPower;
 		rightPower *= reducedPower;
-		LCD.drawInt(leftPower, 5, 0);
-		LCD.drawInt(rightPower, 5, 1);
+//		LCD.drawInt(leftPower, 5, 0);
+//		LCD.drawInt(rightPower, 5, 1);
 		
 		leftMotor.setPower(leftPower);
 		rightMotor.setPower(rightPower);
@@ -139,10 +139,7 @@ public class LineRobot extends Robot {
 			if(sum > thresh){
 				LCD.drawString("STOP", 0, 3);
 				Sound.beep();
-				leftMotor.stop();
-				rightMotor.stop();
-				
-				sendStartSignal();
+				stopAndSendStartSignal();
 			}else{
 				leftMotor.forward();
 				rightMotor.forward();
@@ -152,9 +149,35 @@ public class LineRobot extends Robot {
 		}
 	}
 	
-	public void sendStartSignal() {
+	public void rotateInPlace(int value){
+		leftMotor.setPower(-value/2);
+		rightMotor.setPower(value/2);
+		Delay.msDelay(500);
+	}
+	
+	public void stopAndSendStartSignal() {
 		// TODO Make sure, it really is a line end.
-		sendInt(88);
+		rotateInPlace(-maxPower/2);  // rotate left a bit
+		
+		int leftReading = leftSensor.getValue();
+		int rightReading = rightSensor.getValue();
+		if(leftReading < 50 || rightReading < 50){
+			return;
+		}
+		
+		rotateInPlace(maxPower); // rotate right twice as much
+		
+		leftReading = leftSensor.getValue();
+		rightReading = rightSensor.getValue();
+		if(leftReading < 50 || rightReading < 50){
+			return;
+		}
+		
+		rotateInPlace(-maxPower/2); //go back to starting position, so you can follow other robot
+		leftMotor.stop();
+		rightMotor.stop();
+		Sound.twoBeeps();
+		sendInt(88); // FIXME: uncomment
 	}
 
 	private void slowDownOnCurves(int leftReading, int rightReading) {

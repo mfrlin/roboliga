@@ -28,7 +28,6 @@ public class StartPoint {
 		else if (Bluetooth.getFriendlyName().equals("Zid")) {
 			
 			int robotPower = 95;
-			
 			WallRobot wallFollower = new WallRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
 			LCD.drawString(Bluetooth.getFriendlyName() + ". Clk to connect.", 0, 0);
 			Button.waitForAnyPress(); // pocakaj s pritiskom gumba, dokler drug robot ni odprt za connection
