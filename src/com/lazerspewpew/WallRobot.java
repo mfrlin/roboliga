@@ -127,6 +127,19 @@ public class WallRobot extends Robot {
 			return number;	
 		}
 	}
+
+
+	public int awaitForStartSignal() {
+		int i = -999;
+		try {
+			i = receiveInt();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return i;
+		// TODO only return from the function when you receive the start signal from line follower;
+		
+	}
 	
 //	public void followWall() {
 //		int read, difference;

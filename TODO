@@ -1,7 +1,7 @@
 RoboLiga - Lazers, pew pew
 
 Ideje:
-    ☐ Poslji podatek o koncu crte woll followerju
+    ✔ Poslji podatek o koncu crte woll followerju @done (12-12-02 20:27)
     ☐ Upocasnjevanje v ovinku: namesto shranjenvanje arraya, shrani vse v en sam int. int = 0.95*int + 0.05 * new_value; Vecja hitrost racunanja.
     ☐ Smart retry lineend. Sometimes it may go out of the line in a tight corner. In that case, try to search a bit on the sides, before giving up and calling it a line end.
     ☐ Discard right sensor data point, if it is much more different that the recent history

@@ -142,6 +142,7 @@ public class LineRobot extends Robot {
 				leftMotor.stop();
 				rightMotor.stop();
 				
+				sendStartSignal();
 			}else{
 				leftMotor.forward();
 				rightMotor.forward();
@@ -151,6 +152,11 @@ public class LineRobot extends Robot {
 		}
 	}
 	
+	public void sendStartSignal() {
+		// TODO Make sure, it really is a line end.
+		sendInt(88);
+	}
+
 	private void slowDownOnCurves(int leftReading, int rightReading) {
 		int sampleDelta = (int)(1000 / steeringHistory.length); // only accept data every sampleDelta ms.
 		sampleDelta = (int)(sampleDelta / 2);

@@ -71,6 +71,7 @@ public class Robot {
 	public boolean sendInt(int number) {
 		try {
 			outputStream.writeInt(number);
+			outputStream.flush();
 			return true;
 		} catch (Exception ioe) {
 			return false;
