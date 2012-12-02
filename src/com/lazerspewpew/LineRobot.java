@@ -155,7 +155,8 @@ public class LineRobot extends Robot {
 		int sampleDelta = (int)(1000 / steeringHistory.length); // only accept data every sampleDelta ms.
 		sampleDelta = (int)(sampleDelta / 2);
 		int thresh = steeringHistory.length * 20;
-		double acceleration = 0.05; // should be a fraction of 1.
+		double decceleration = 0.05; // should be a fraction of 1.
+		double acceleration = decceleration * 4; // should be a fraction of 1.
 		
 		long now = System.currentTimeMillis();
 		
@@ -173,7 +174,7 @@ public class LineRobot extends Robot {
 			if(sum > thresh){
 				LCD.drawString("SLOW", 0, 4);
 //				Sound.twoBeeps();
-				reducedPower -= (reducedPower - 0.5) * acceleration; // 0.5 mean a reduction of up to 50% in speed.
+				reducedPower -= (reducedPower - 0.5) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
 			}else{
 				reducedPower += (1 - reducedPower) * acceleration;
 			}
@@ -234,7 +235,6 @@ public class LineRobot extends Robot {
 		int temp = 0;
 		for(int i=0;i<arr.length;i++){
 			temp += Math.abs(arr[i]);
-			//temp += 5;
 		}
 		return temp;
 	}

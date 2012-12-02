@@ -1,0 +1,18 @@
+RoboLiga - Lazers, pew pew
+
+Ideje:
+    ☐ Preveri wall following
+    ☐ Poslji podatek o koncu crte woll followerju
+    ☐ Upocasnjevanje v ovinku: namesto shranjenvanje arraya, shrani vse v en sam int. int = 0.95*int + 0.05 * new_value; Vecja hitrost racunanja.
+    ☐ Smart retry lineend. Sometimes it may go out of the line in a tight corner. In that case, try to search a bit on the sides, before giving up and calling it a line end.
+
+Crazy ideas:
+    ❍ music playing while running
+
+
+＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+Archive:
+ ✔ upocasni v ovinku -> shranjuj podatke in ce abs(sum) > alpha zmanjsaj hitrost @done (12-12-02 00:28)
+ ✔ ustavi na koncu crte @done (12-12-02 00:29)
+ ✔ Normaliziraj moc motorjev, ker je eden obcutno mocnejsi od drugega. @done (12-12-01 11:45)
+ ✔ normalizirati signale @done (12-11-01 22:56)
