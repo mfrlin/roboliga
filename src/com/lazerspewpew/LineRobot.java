@@ -137,7 +137,7 @@ public class LineRobot extends Robot {
 //			LCD.drawInt(thresh, 0, 1);
 			
 			if(sum > thresh){
-				LCD.drawString("STOP", 0, 3);
+				LCD.drawString("STOP?", 0, 3);
 				Sound.beep();
 				stopAndSendStartSignal();
 			}else{
@@ -149,31 +149,37 @@ public class LineRobot extends Robot {
 		}
 	}
 	
-	public void rotateInPlace(int value){
-		leftMotor.setPower(-value/2);
-		rightMotor.setPower(value/2);
-		Delay.msDelay(500);
+	public void rotateInPlace(int power, int time){
+		rightMotor.setPower(0);
+		leftMotor.setPower(0);	
+		leftMotor.setPower(-power/2);
+		rightMotor.setPower(power/2);
+		Delay.msDelay(time);
+		rightMotor.setPower(0);
+		leftMotor.setPower(0);
 	}
 	
 	public void stopAndSendStartSignal() {
-		// TODO Make sure, it really is a line end.
-		rotateInPlace(-maxPower/2);  // rotate left a bit
+		int time = (int)(20000 / maxPower);
 		
-		int leftReading = leftSensor.getValue();
-		int rightReading = rightSensor.getValue();
-		if(leftReading < 50 || rightReading < 50){
+		rotateInPlace((int)(-maxPower/2), time );  // rotate left a bit
+		
+		if(leftSensor.getValue() < 50 || rightSensor.getValue() < 50){
 			return;
 		}
 		
-		rotateInPlace(maxPower); // rotate right twice as much
+		rotateInPlace(maxPower/2 , time * 2); // rotate right twice as much
 		
-		leftReading = leftSensor.getValue();
-		rightReading = rightSensor.getValue();
-		if(leftReading < 50 || rightReading < 50){
+		if(leftSensor.getValue() < 50 || rightSensor.getValue() < 50){
 			return;
 		}
 		
-		rotateInPlace(-maxPower/2); //go back to starting position, so you can follow other robot
+		rotateInPlace((int)(-maxPower/2), time); //go back to starting position, so you can follow other robot
+		
+		if(leftSensor.getValue() < 50 || rightSensor.getValue() < 50){
+			return;
+		}
+
 		leftMotor.stop();
 		rightMotor.stop();
 		Sound.twoBeeps();
