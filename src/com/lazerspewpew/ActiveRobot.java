@@ -1,6 +1,7 @@
 package com.lazerspewpew;
 import java.io.IOException;
 
+import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
 import lejos.nxt.SensorPort;
 import lejos.nxt.Sound;
@@ -132,22 +133,22 @@ public class ActiveRobot extends Robot {
 			}
 			
 			
-			now = System.currentTimeMillis();
-			timeChange = now - lastSend;
-			if (timeChange >= sendInterval) {
-				sendTachoCounts();
-				lastSend = now;
-			}
+//			now = System.currentTimeMillis();
+//			timeChange = now - lastSend;
+//			if (timeChange >= sendInterval) {
+//				sendTachoCounts();
+//				lastSend = now;
+//			}
 			
-//			LCD.clear();
-//			LCD.drawString("Front:", 0, 0);
-//			LCD.drawString("Right:", 0, 1);
-//			LCD.drawInt(frontDistance, 7, 0);
-//			LCD.drawInt(rightDistance, 7, 1);
+			LCD.clear();
+			LCD.drawString("Front:", 0, 0);
+			LCD.drawString("Right:", 0, 1);
+			LCD.drawInt(frontDistance, 7, 0);
+			LCD.drawInt(rightDistance, 7, 1);
 			
-//			LCD.drawString("Steer:", 0, 2);
-//			LCD.drawInt(steerDifference, 7, 2);
-//			Delay.msDelay(500);
+			LCD.drawString("Steer:", 0, 2);
+			LCD.drawInt(steerDifference, 7, 2);
+			Delay.msDelay(500);
 		}
 		
 	}

@@ -11,9 +11,15 @@ public class StartPointNoComm {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int robotPower = 100;
-		LineRobot crta = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
+		int robotPower = 95;
+//		LineRobot crta = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
+//		Button.waitForAnyPress();
+//		crta.followLine();
+		
+		WallRobot wall = new WallRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
+		LCD.clear();
+		LCD.drawString("wating for button press", 0, 0);
 		Button.waitForAnyPress();
-		crta.followLine();
+		wall.followWall();
 	}
 }
