@@ -118,6 +118,7 @@ public class LineRobot extends Robot {
 			steer(difference);
 			Delay.msDelay(5);
 		}
+		
 		writeIntAsString(dos,111111);
 		writeIntAsString(dos,sum(arr));
 		flushAndClose(dos);
