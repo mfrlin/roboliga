@@ -15,12 +15,12 @@ public class StartPoint {
 		
 		if (Bluetooth.getFriendlyName().equals("Crta")) {
 			
-			int robotPower = 95;
+			int robotPower = 70;
 			
 			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
 			lineFollower.actAsReceiver();
 			LCD.clear();LCD.drawString("Click to START.", 0, 0);
-			Button.waitForAnyPress();
+			//Button.waitForAnyPress();
 			lineFollower.followLine(); // tudi poslje signal na koncu
 			Button.waitForAnyPress();
 		}
@@ -33,11 +33,8 @@ public class StartPoint {
 			Button.waitForAnyPress(); // pocakaj s pritiskom gumba, dokler drug robot ni odprt za connection
 			LCD.clear();
 			wallFollower.connectToRemote("Crta");
-			LCD.clear();LCD.drawString("WAITING FOR SIGNAL", 0, 0);
-			int i = wallFollower.awaitForStartSignal();
-			LCD.drawInt(i, 0, 1);
-			LCD.drawString("CAN START NOW??!?", 0, 2);
-			wallFollower.followWall();
+			LCD.clear();LCD.drawString("WAITING FOLLOW", 0, 0);
+			wallFollower.follow();
 		}
 	}
 }

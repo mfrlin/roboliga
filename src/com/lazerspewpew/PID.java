@@ -7,7 +7,7 @@ public class PID {
 	private double ITerm, lastInput;
 	private double lastOutput;
 	private double kp, ki, kd;
-	private int sampleTime = 5; // milliseconds
+	private int sampleTime = 100; // milliseconds
 	private double outMin, outMax;
 
 	public PID(double kp, double ki, double kd, double outMin, double outMax) {

@@ -1,10 +1,13 @@
 package com.lazerspewpew;
 
 import java.io.IOException;
+import java.util.Queue;
 
+import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
 import lejos.nxt.NXTMotor;
+import lejos.nxt.NXTRegulatedMotor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.UltrasonicSensor;
 import lejos.util.Delay;
@@ -12,15 +15,20 @@ import lejos.util.Delay;
 public class WallRobot extends Robot {
 	private NXTMotor leftMotor;
 	private NXTMotor rightMotor;
+	private NXTRegulatedMotor leftReguMotor;
+	private NXTRegulatedMotor rightReguMotor;
 	private UltrasonicSensor usFrontSensor;
 	private UltrasonicSensor usRightSensor;
 	private PID myPID;
 	private int wantedWallDistance; /* Zeljena povprecna razdalja od zidu */ 
 	private int wallFrontDistance; /* Kdaj reagira ko zazna zid spredaj */
+	protected Queue<int[]> followData = new Queue<int[]>();
 	
 	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
-		rightMotor = new NXTMotor(rightMotorPort); 
+		rightMotor = new NXTMotor(rightMotorPort);
+		//leftReguMotor = new NXTRegulatedMotor(leftMotorPort);
+		//rightReguMotor = new NXTRegulatedMotor(rightMotorPort); 
 		this.wantedWallDistance = (int) (23 * 1.1); // na kaki razdalji se naj pelje desno
 		this.wallFrontDistance = 26; // na kaki razdalji naj zaène upoštevati sprednji senzor
 		
@@ -122,7 +130,70 @@ public class WallRobot extends Robot {
 		}
 		
 	}
-	
+	public void follow() {
+		Thread communications = new Thread(new Communicate());
+		communications.start();
+		LCD.clear();LCD.drawString("Press to follow", 0, 0);
+		Button.waitForAnyPress();
+		LCD.clear();
+		int lastLeftTacho = 0;
+		int lastRightTacho = 0;
+		
+		while (true) {
+			int[] parameters = null;
+			synchronized(followData) {
+				if (!followData.empty()) {
+					parameters = (int[]) followData.pop(); 
+				}
+			}
+			
+			if (parameters != null) {
+				leftMotor.setPower(parameters[2]);
+				rightMotor.setPower(parameters[3]);
+				LCD.drawInt(parameters[0], 5, 0, 0);
+				LCD.drawInt(parameters[1], 5, 0, 1);
+				LCD.drawInt(parameters[2], 5, 0, 2);
+				LCD.drawInt(parameters[3], 5, 0, 3);
+				while(true) { // leftMotor.getTachoCount() - lastLeftTacho < parameters[0] || rightMotor.getTachoCount() - lastRightTacho < parameters[1] 
+					if (leftMotor.getTachoCount() - lastLeftTacho >= parameters[0]) {
+						leftMotor.setPower(0);
+						lastLeftTacho = leftMotor.getTachoCount();
+						lastRightTacho = rightMotor.getTachoCount();
+						break;
+					}
+					if (rightMotor.getTachoCount() - lastRightTacho >= parameters[1]) {
+						rightMotor.setPower(0);
+						lastLeftTacho = leftMotor.getTachoCount();
+						lastRightTacho = rightMotor.getTachoCount();
+						break;
+					}
+				}
+					
+			}
+		}
+		
+		
+	}
+	public void followReadings() {
+		Thread communications = new Thread(new Communicate());
+		communications.start();
+		LCD.clear();LCD.drawString("Press to follow", 0, 0);
+		Button.waitForAnyPress();
+		LCD.clear();
+		
+		while (true) {
+			int[] parameters = null;
+			synchronized(followData) {
+				if (!followData.empty()) {
+					parameters = (int[]) followData.pop(); 
+				}
+			}
+			
+			if (parameters != null) {
+				
+			}
+		}
+	}
 	private int limit(int number, int maxBound) {
 		if ( number > maxBound ){
 			return maxBound;
@@ -144,6 +215,48 @@ public class WallRobot extends Robot {
 		return i;
 		// TODO only return from the function when you receive the start signal from line follower;
 		
+	}
+	
+	public void getTachoCounts() {
+		int[] temp = new int[4];
+		try {
+			if (inputStream.available() != 0) {
+				temp[0] = inputStream.readInt();
+				temp[1] = inputStream.readInt();
+				temp[2] = inputStream.readInt();
+				temp[3] = inputStream.readInt();
+				synchronized(followData) { followData.push(temp); }
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public void getReadings() {
+		int[] temp = new int[4];
+		try {
+			if (inputStream.available() != 0) {
+				temp[0] = inputStream.readInt();
+				synchronized(followData) { followData.push(temp); }
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private class Communicate implements Runnable {
+		public void run() {
+			
+			while (true) {
+				getTachoCounts();
+				
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 //	public void followWall() {
