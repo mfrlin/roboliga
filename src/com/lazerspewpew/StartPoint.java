@@ -3,6 +3,7 @@ import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
 import lejos.nxt.SensorPort;
+import lejos.nxt.Sound;
 import lejos.nxt.comm.Bluetooth;
 import lejos.util.Delay;
 
@@ -22,6 +23,8 @@ public class StartPoint {
 			LCD.clear();LCD.drawString("Click to START.", 0, 0);
 			//Button.waitForAnyPress();
 			lineFollower.followLine(); // tudi poslje signal na koncu
+			lineFollower.rotateInPlace(100, 810); // TODO: tweak this
+			lineFollower.driveStraight(70, 1000);
 			Button.waitForAnyPress();
 		}
 		

@@ -141,12 +141,11 @@ public class WallRobot extends Robot {
 		LCD.clear();LCD.drawString("Press to follow", 0, 0);
 		Button.waitForAnyPress();
 		LCD.clear();
-		int tachoAdjustCoef = 5;
+		double tachoAdjustCoef = 0.5;
 		int leftDifference = 0;
 		int rightDifference = 0;
 		
 		while (true) {
-			LCD.drawInt(followData.size(), 10, 0, 2);
 			int[] parameters = null;
 			synchronized(followData) {
 				if (!followData.empty()) {
@@ -157,16 +156,26 @@ public class WallRobot extends Robot {
 			if (parameters != null) {
 				leftGlobalTacho += parameters[0];
 				rightGlobalTacho += parameters[1];
-				leftMotor.setPower(parameters[2]+leftDifference);
-				rightMotor.setPower(parameters[3]+rightDifference);
-				while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) { 
+				int leftPower = parameters[2]+leftDifference;
+				leftMotor.setPower(leftPower);
+				int rightPower = parameters[3]+rightDifference;
+				rightMotor.setPower(rightPower);
+				while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
+					if (leftMotor.getTachoCount() > leftGlobalTacho) {
+						leftMotor.setPower((int)(leftPower/1.5));
+					}
+					if (rightMotor.getTachoCount() > rightGlobalTacho) {
+						rightMotor.setPower((int)(rightPower/1.5));
+					}
 				}
 				leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();
 				rightDifferenceTacho = rightGlobalTacho - rightMotor.getTachoCount();
-				leftDifference = leftDifferenceTacho / tachoAdjustCoef;
-				rightDifference = rightDifferenceTacho / tachoAdjustCoef;
-				if (leftDifference < 0) leftDifference = 0;
-				if (rightDifference < 0) rightDifference = 0;
+				leftDifference = (int)(leftDifferenceTacho / tachoAdjustCoef);
+				rightDifference = (int)(rightDifferenceTacho / tachoAdjustCoef);
+				LCD.drawInt(leftDifference,10,0,1);
+				LCD.drawInt(rightDifference,10,0,3);
+				//if (leftDifference < 0) leftDifference = 0;
+				//if (rightDifference < 0) rightDifference = 0;
 			}
 		}
 		
@@ -206,14 +215,10 @@ public class WallRobot extends Robot {
 				temp[3] = inputStream.readInt();
 				int getCounter = inputStream.readInt();
 				if (getCounter != expectedCounter) {
-					LCD.clear();
-					LCD.drawInt(getCounter, 0, 5);
-					LCD.drawInt(expectedCounter, 0, 5);
 					Button.waitForAnyPress();
 				}
 				else {
 					expectedCounter++;
-					LCD.drawInt(expectedCounter, 0, 1);
 				}
 				synchronized(followData) { followData.push(temp); }
 			}

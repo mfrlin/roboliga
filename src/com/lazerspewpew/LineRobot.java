@@ -22,7 +22,7 @@ public class LineRobot extends Robot {
 	private int[] steeringHistory = new int[10]; // Steivlo elementov naj bo SODO. Array za shranjevanje getSensorReadings().;
 	private int steeringHistoryCounter = 0; // index zadnjega shranjenega elementa v sensorDifferences
 	private double reducedPower = 1;
-//	private boolean lineEnd = false;
+	private boolean lineEnd = false;
 	private long lastSend;
 	private long sendInterval = 50;
 	private int powerSampleCounter = 0;
@@ -116,14 +116,15 @@ public class LineRobot extends Robot {
 		int leftReading = leftSensor.getValue();
 		int rightReading = rightSensor.getValue();
 		
-		detectLineEnd(leftReading, rightReading);
+		lineEnd = detectLineEnd(leftReading, rightReading);
+			
 		
 		slowDownOnCurves(leftReading, rightReading);
 		
 		return rightReading - leftReading;
 	}
 	
-	private void detectLineEnd(int leftReading, int rightReading) {
+	private boolean detectLineEnd(int leftReading, int rightReading) {
 		int sampleDelta = (int)(1000 / sensorMinValuesHistory.length); // only accept data every sampleDelta ms. Will stop in 1 second.
 		sampleDelta = (int)(sampleDelta / (3.0 * maxPower / 50.0)); // 2.0 is the scaling factor
 		int thresh = sensorMinValuesHistory.length * 70;
@@ -141,13 +142,16 @@ public class LineRobot extends Robot {
 				LCD.drawString("STOP?", 0, 3);
 				//Sound.beep();
 				stopAndSendStartSignal();
+				return true;
 			}else{
 				leftMotor.forward();
 				rightMotor.forward();
 				leftMotor.setPower(Math.max(leftMotor.getPower(), 20));
 				rightMotor.setPower(Math.max(rightMotor.getPower(), 20));
+				return false;
 			}
 		}
+		return false;
 	}
 	
 	public void rotateInPlace(int power, int time){
@@ -181,10 +185,10 @@ public class LineRobot extends Robot {
 			return;
 		}
 
-		leftMotor.stop();
-		rightMotor.stop();
+		leftMotor.setPower(0);
+		rightMotor.setPower(0); //TODO: tweak this
 		//Sound.twoBeeps();
-		sendInt(88); // FIXME: uncomment
+		sendInt(-666); // FIXME: uncomment
 	}
 
 	private void slowDownOnCurves(int leftReading, int rightReading) {
@@ -203,12 +207,12 @@ public class LineRobot extends Robot {
 			steeringHistory[getSteeringHistoryCounter()] = rightReading-leftReading;
 			
 			int sum = absoluteSum(steeringHistory);
-			LCD.clear();
-			LCD.drawInt(sum, 0, 6);
-			LCD.drawInt(thresh, 0, 7);
+			//LCD.clear();
+			//LCD.drawInt(sum, 0, 6);
+			//LCD.drawInt(thresh, 0, 7);
 			
 			if(sum > thresh){
-				LCD.drawString("SLOW", 0, 4);
+				//LCD.drawString("SLOW", 0, 4);
 //				Sound.twoBeeps();
 				reducedPower -= (reducedPower - 1) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
 			}else{
@@ -244,7 +248,7 @@ public class LineRobot extends Robot {
 		long timeChange, now;
 		leftMotor.resetTachoCount();
 		rightMotor.resetTachoCount();
-		while(true) {
+		while(!lineEnd) {
 			read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
 			steer = (int)myPID.compute(read, 0);
 			steer(steer);
@@ -270,10 +274,6 @@ public class LineRobot extends Robot {
 		int leftPower = leftPowerSamples/powerSampleCounter;
 		int rightPower = rightPowerSamples/powerSampleCounter;
 
-		LCD.drawInt(leftWheel, 5, 0, 0);
-		LCD.drawInt(rightWheel, 5, 0, 1);
-		LCD.drawInt(leftPower, 5, 0, 2);
-		LCD.drawInt(rightPower, 5, 0, 3);
 		try {
 			outputStream.writeInt(leftWheel);
 			outputStream.writeInt(rightWheel);
@@ -339,6 +339,13 @@ public class LineRobot extends Robot {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	public void driveStraight(int power, int time) {
+		leftMotor.setPower(power);
+		rightMotor.setPower(power);
+		Delay.msDelay(time);
+		leftMotor.setPower(0);
+		rightMotor.setPower(0);
 	}
 
 }
