@@ -24,7 +24,11 @@ public class LineRobot extends Robot {
 	private double reducedPower = 1;
 //	private boolean lineEnd = false;
 	private long lastSend;
-	private long sendInterval = 100;
+	private long sendInterval = 50;
+	private int powerSampleCounter = 0;
+	private int leftPowerSamples = 0;
+	private int rightPowerSamples = 0;
+	
 	
 	private long lastTimeLineEnd = System.currentTimeMillis(); // za omejevanje stevila podatkov v sensorMinValuesHistory
 	private long lastTimeSlowDown = System.currentTimeMillis(); // za omejevanje stevila podatkov v steeringHistory
@@ -206,7 +210,7 @@ public class LineRobot extends Robot {
 			if(sum > thresh){
 				LCD.drawString("SLOW", 0, 4);
 //				Sound.twoBeeps();
-				reducedPower -= (reducedPower - 0.8) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
+				reducedPower -= (reducedPower - 1) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
 			}else{
 				reducedPower += (1 - reducedPower) * acceleration;
 			}
@@ -236,6 +240,7 @@ public class LineRobot extends Robot {
 
 	public void followLine() {
 		int read, steer;
+		int counter = 0;
 		long timeChange, now;
 		leftMotor.resetTachoCount();
 		rightMotor.resetTachoCount();
@@ -245,21 +250,25 @@ public class LineRobot extends Robot {
 			steer(steer);
 			now = System.currentTimeMillis();
 			timeChange = now - lastSend;
+			leftPowerSamples += leftMotor.getPower();
+			rightPowerSamples += rightMotor.getPower();
+			powerSampleCounter++;
 			if (timeChange >= sendInterval) {
-				sendTachoCounts();
-				//sendReadings(read);
+				sendTachoCounts(counter);
+				counter++;
+				
 				lastSend = now;
 			}
 		}
 	}
 	
-	public boolean sendTachoCounts() {
+	public boolean sendTachoCounts(int counter) {
 		int leftWheel = leftMotor.getTachoCount();
 		leftMotor.resetTachoCount();
 		int rightWheel = rightMotor.getTachoCount();
 		rightMotor.resetTachoCount();
-		int leftPower = leftMotor.getPower();
-		int rightPower = rightMotor.getPower();
+		int leftPower = leftPowerSamples/powerSampleCounter;
+		int rightPower = rightPowerSamples/powerSampleCounter;
 
 		LCD.drawInt(leftWheel, 5, 0, 0);
 		LCD.drawInt(rightWheel, 5, 0, 1);
@@ -268,9 +277,15 @@ public class LineRobot extends Robot {
 		try {
 			outputStream.writeInt(leftWheel);
 			outputStream.writeInt(rightWheel);
-			outputStream.writeInt(leftMotor.getPower());
-			outputStream.writeInt(rightMotor.getPower());
+			outputStream.writeInt(leftPower);
+			outputStream.writeInt(rightPower);
+			outputStream.writeInt(counter);
+			
 			outputStream.flush();
+			powerSampleCounter = 0;
+			leftPowerSamples = 0;
+			rightPowerSamples = 0;
+			
 			return true;
 		} catch (IOException e) {
 			e.printStackTrace();
