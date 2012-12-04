@@ -165,8 +165,8 @@ public class WallRobot extends Robot {
 				rightDifferenceTacho = rightGlobalTacho - rightMotor.getTachoCount();
 				leftDifference = leftDifferenceTacho / tachoAdjustCoef;
 				rightDifference = rightDifferenceTacho / tachoAdjustCoef;
-				//if (leftDifference < 0) leftDifference = 0;
-				//if (rightDifference < 0) rightDifference = 0;
+				if (leftDifference < 0) leftDifference = 0;
+				if (rightDifference < 0) rightDifference = 0;
 			}
 		}
 		
