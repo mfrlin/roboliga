@@ -19,7 +19,7 @@ public class StartPoint {
 			
 			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
 			lineFollower.actAsReceiver();
-			LCD.clear();LCD.drawString("Clk to START.", 0, 0);
+			LCD.clear();LCD.drawString("Click to START.", 0, 0);
 			Button.waitForAnyPress();
 			lineFollower.followLine(); // tudi poslje signal na koncu
 			Button.waitForAnyPress();
@@ -36,7 +36,7 @@ public class StartPoint {
 			LCD.clear();LCD.drawString("WAITING FOR SIGNAL", 0, 0);
 			int i = wallFollower.awaitForStartSignal();
 			LCD.drawInt(i, 0, 1);
-			LCD.drawString("CAN START NOW", 0, 2);
+			LCD.drawString("CAN START NOW??!?", 0, 2);
 			wallFollower.followWall();
 		}
 	}

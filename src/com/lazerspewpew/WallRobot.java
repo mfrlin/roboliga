@@ -21,8 +21,8 @@ public class WallRobot extends Robot {
 	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort); 
-		this.wantedWallDistance = (int) (22 * 1.1); // na kaki razdalji se naj pelje desno
-		this.wallFrontDistance = 24; // na kaki razdalji naj zaène upoštevati sprednji senzor
+		this.wantedWallDistance = (int) (23 * 1.1); // na kaki razdalji se naj pelje desno
+		this.wallFrontDistance = 26; // na kaki razdalji naj zaène upoštevati sprednji senzor
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
 		usRightSensor = new UltrasonicSensor(rightSensorPort);
@@ -63,16 +63,21 @@ public class WallRobot extends Robot {
 	 * Zavrti robota v levo, dokler ne zazna vec zidu spredaj, in dokler je dovolj odmaknjena od desnega zidu.
 	 * */
 	private void rotateUntilNoBarrier() {
+		boolean[] neki = new boolean[] {true,true};
+		int count = 0;
 		do { // do at least once
 			steer(this.maxPower);
-			leftMotor.setPower(3 * maxPower/4);
-			rightMotor.setPower(-maxPower/2);
-		} while( usFrontSensor.getDistance() < 0.7 * wallFrontDistance || usRightSensor.getDistance() < wantedWallDistance );
+			leftMotor.setPower((int) (2.5 *(wallFrontDistance / wantedWallDistance) * 3 * maxPower/4));
+			rightMotor.setPower(-maxPower/3);
+			//neki[count] = usFrontSensor.getDistance() < wallFrontDistance;
+			//count = (count + 1) % 2;
+		//} while( neki[(count + 1) % 2]);
+		} while( usFrontSensor.getDistance() < 0.9 * wallFrontDistance);// || usRightSensor.getDistance() < wantedWallDistance );
 		
 		/* Zaradi teh delajev vozi bolj naravno. */
-		Delay.msDelay(300);
+		Delay.msDelay(50);
 		steer(0);
-		Delay.msDelay(300);
+		Delay.msDelay(100);
 		
 		
 	}
