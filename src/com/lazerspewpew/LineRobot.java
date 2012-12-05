@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Queue;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
@@ -28,6 +29,13 @@ public class LineRobot extends Robot {
 	private int powerSampleCounter = 0;
 	private int leftPowerSamples = 0;
 	private int rightPowerSamples = 0;
+	
+	protected Queue<int[]> followData = new Queue<int[]>();
+	protected int expectedCounter = 0;
+	protected int leftGlobalTacho = 0;
+	protected int rightGlobalTacho = 0;
+	protected int leftDifferenceTacho = 0;
+	protected int rightDifferenceTacho = 0;
 	
 	
 	private long lastTimeLineEnd = System.currentTimeMillis(); // za omejevanje stevila podatkov v sensorMinValuesHistory
@@ -346,6 +354,103 @@ public class LineRobot extends Robot {
 		Delay.msDelay(time);
 		leftMotor.setPower(0);
 		rightMotor.setPower(0);
+	}
+	
+	public void getTachoCounts() {
+		int[] temp = new int[4];
+		try {
+			if (inputStream.available() != 0) {
+				int first = inputStream.readInt();
+				if (first == -666) {
+					temp[0] = first;
+					temp[1] = first;
+					temp[2] = first;
+					temp[3] = first;
+				}
+				else {
+					temp[0] = first;
+					temp[1] = inputStream.readInt();
+					temp[2] = inputStream.readInt();
+					temp[3] = inputStream.readInt();
+				}
+				int getCounter = inputStream.readInt();
+				/*if (getCounter != expectedCounter) {
+					Button.waitForAnyPress();
+				}
+				else {
+					expectedCounter++;
+				}*/
+				synchronized(followData) { followData.push(temp); }
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private class Communicate implements Runnable {
+		public void run() {
+			
+			while (true) {
+				getTachoCounts();
+				
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void follow() {
+		Thread communications = new Thread(new Communicate());
+		communications.start();
+		Delay.msDelay(5000); //Delay za start sledenja po zamenjavi
+		double tachoAdjustCoef = 0.5;
+		int leftDifference = 0;
+		int rightDifference = 0;
+		
+		while (true) {
+			int[] parameters = null;
+			synchronized(followData) {
+				if (!followData.empty()) {
+					parameters = (int[]) followData.pop(); 
+				}
+			}
+			
+			if (parameters != null) {
+				if (parameters[0] == -666) {
+					leftMotor.setPower(0);
+					rightMotor.setPower(0);
+					break;
+				}
+				else {
+					leftGlobalTacho += parameters[0];
+					rightGlobalTacho += parameters[1];
+					int leftPower = parameters[2]+leftDifference;
+					leftMotor.setPower(leftPower);
+					int rightPower = parameters[3]+rightDifference;
+					rightMotor.setPower(rightPower);
+					while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
+						if (leftMotor.getTachoCount() > leftGlobalTacho) {
+							leftMotor.setPower((int)(leftPower/1.5));
+						}
+						if (rightMotor.getTachoCount() > rightGlobalTacho) {
+							rightMotor.setPower((int)(rightPower/1.5));
+						}
+					}
+					leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();
+					rightDifferenceTacho = rightGlobalTacho - rightMotor.getTachoCount();
+					leftDifference = (int)(leftDifferenceTacho / tachoAdjustCoef);
+					rightDifference = (int)(rightDifferenceTacho / tachoAdjustCoef);
+					LCD.drawInt(leftDifference,10,0,1);
+					LCD.drawInt(rightDifference,10,0,3);
+					//if (leftDifference < 0) leftDifference = 0;
+					//if (rightDifference < 0) rightDifference = 0;
+				}
+			}
+		}
 	}
 
 }

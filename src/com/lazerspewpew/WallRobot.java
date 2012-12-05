@@ -27,17 +27,21 @@ public class WallRobot extends Robot {
 	protected int rightGlobalTacho = 0;
 	protected int leftDifferenceTacho = 0;
 	protected int rightDifferenceTacho = 0;
-	protected boolean firstFollower;
+	
+	private long lastSend;
+	private long sendInterval = 50;
+	private int powerSampleCounter = 0;
+	private int leftPowerSamples = 0;
+	private int rightPowerSamples = 0;
 	
 	
-	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower, boolean firstFollower) {
+	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort);
 		//leftReguMotor = new NXTRegulatedMotor(leftMotorPort);
 		//rightReguMotor = new NXTRegulatedMotor(rightMotorPort); 
 		this.wantedWallDistance = (int) (23 * 1.1); // na kaki razdalji se naj pelje desno
 		this.wallFrontDistance = 26; // na kaki razdalji naj zaène upoštevati sprednji senzor
-		this.firstFollower = firstFollower;
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
 		usRightSensor = new UltrasonicSensor(rightSensorPort);
@@ -100,11 +104,12 @@ public class WallRobot extends Robot {
 	public void followWall() {
 		int steerDifference = 0;
 		double steerFactor = 3;
-//		long now, timeChange;
+		int counter = 0;
+		long timeChange, now;
 				
 		while (true) {			
 			LCD.clear();
-			
+			LCD.drawString("following wall", 0, 0);
 			int frontDistance = usFrontSensor.getDistance();
 			int rightDistance = usRightSensor.getDistance();
 //			 Ce se pribliza steni spredaj se obrni za ~90deg.
@@ -117,34 +122,53 @@ public class WallRobot extends Robot {
 				steerDifference = limit(steerDifference, (int) (maxPower * 0.5) );
 				steer( steerDifference );
 			}
-
-//			now = System.currentTimeMillis();
-//			timeChange = now - lastSend;
-//			if (timeChange >= sendInterval) {
-//				sendTachoCounts();
-//				lastSend = now;
-//			}
-			
-//			LCD.clear();
-//			LCD.drawString("Front:", 0, 0);
-//			LCD.drawString("Right:", 0, 1);
-//			LCD.drawInt(frontDistance, 7, 0);
-//			LCD.drawInt(rightDistance, 7, 1);
-//			
-//			LCD.drawString("Steer:", 0, 2);
-//			LCD.drawInt(steerDifference, 7, 2);
-//			Delay.msDelay(500);
+			now = System.currentTimeMillis();
+			timeChange = now - lastSend;
+			leftPowerSamples += leftMotor.getPower();
+			rightPowerSamples += rightMotor.getPower();
+			powerSampleCounter++;
+			if (timeChange >= sendInterval) {
+				sendTachoCounts(counter);
+				counter++;
+				
+				lastSend = now;
+			}
 		}
 		
 	}
+	
+	public boolean sendTachoCounts(int counter) {
+		int leftWheel = leftMotor.getTachoCount();
+		leftMotor.resetTachoCount();
+		int rightWheel = rightMotor.getTachoCount();
+		rightMotor.resetTachoCount();
+		int leftPower = leftPowerSamples/powerSampleCounter;
+		int rightPower = rightPowerSamples/powerSampleCounter;
+
+		try {
+			outputStream.writeInt(leftWheel);
+			outputStream.writeInt(rightWheel);
+			outputStream.writeInt(leftPower);
+			outputStream.writeInt(rightPower);
+			outputStream.writeInt(counter);
+			
+			outputStream.flush();
+			powerSampleCounter = 0;
+			leftPowerSamples = 0;
+			rightPowerSamples = 0;
+			
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	public void follow() {
 		Thread communications = new Thread(new Communicate());
 		communications.start();
 		LCD.clear();LCD.drawString("Press to follow", 0, 0);
-		if (firstFollower) {
-			Button.waitForAnyPress();
-		}
-		
+		Button.waitForAnyPress();
 		LCD.clear();
 		double tachoAdjustCoef = 0.5;
 		int leftDifference = 0;
@@ -271,6 +295,7 @@ public class WallRobot extends Robot {
 			int frontDistance = usFrontSensor.getDistance();
 			if (frontDistance < wallFrontDistance) {
 				rotateInPlace(-100, 810);
+				break;
 			}
 		}
 		
