@@ -25,7 +25,7 @@ public class LineRobot extends Robot {
 	private double reducedPower = 1;
 	private boolean lineEnd = false;
 	private long lastSend;
-	private long sendInterval = 50;
+	private long sendInterval = 100;
 	private int powerSampleCounter = 0;
 	private int leftPowerSamples = 0;
 	private int rightPowerSamples = 0;
@@ -187,7 +187,7 @@ public class LineRobot extends Robot {
 			return;
 		}
 		
-		rotateInPlace((int)(-maxPower/2), time); //go back to starting position, so you can follow other robot
+		rotateInPlace((int)(-maxPower/4), time); //go back to starting position, so you can follow other robot
 		
 		if(leftSensor.getValue() < 50 || rightSensor.getValue() < 50){
 			return;

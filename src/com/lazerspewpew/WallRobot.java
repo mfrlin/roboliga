@@ -29,7 +29,7 @@ public class WallRobot extends Robot {
 	protected int rightDifferenceTacho = 0;
 	
 	private long lastSend;
-	private long sendInterval = 50;
+	private long sendInterval = 100;
 	private int powerSampleCounter = 0;
 	private int leftPowerSamples = 0;
 	private int rightPowerSamples = 0;
@@ -170,11 +170,15 @@ public class WallRobot extends Robot {
 		LCD.clear();LCD.drawString("Press to follow", 0, 0);
 		Button.waitForAnyPress();
 		LCD.clear();
-		double tachoAdjustCoef = 0.5;
+		double tachoAdjustCoef = 1;
+		double paramAdjustCoef = 0.5;
 		int leftDifference = 0;
 		int rightDifference = 0;
 		
 		while (true) {
+			/*if (usRightSensor.getDistance() < wantedWallDistance) {
+				break;
+			}*/
 			int[] parameters = null;
 			synchronized(followData) {
 				if (!followData.empty()) {
@@ -191,16 +195,20 @@ public class WallRobot extends Robot {
 				else {
 					leftGlobalTacho += parameters[0];
 					rightGlobalTacho += parameters[1];
-					int leftPower = parameters[2]+leftDifference;
+					int paramDifference = (int)((parameters[0] - parameters[1])/paramAdjustCoef);
+					//int paramDifference = 0;
+					int leftPower = parameters[2]+leftDifference-paramDifference;
 					leftMotor.setPower(leftPower);
-					int rightPower = parameters[3]+rightDifference;
+					int rightPower = parameters[3]+rightDifference+paramDifference;
 					rightMotor.setPower(rightPower);
+					
+					
 					while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
 						if (leftMotor.getTachoCount() > leftGlobalTacho) {
-							leftMotor.setPower((int)(leftPower/1.5));
+							leftMotor.setPower((int)(leftPower/2));
 						}
 						if (rightMotor.getTachoCount() > rightGlobalTacho) {
-							rightMotor.setPower((int)(rightPower/1.5));
+							rightMotor.setPower((int)(rightPower/2));
 						}
 					}
 					leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();

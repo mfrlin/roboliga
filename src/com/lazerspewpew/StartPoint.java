@@ -16,7 +16,7 @@ public class StartPoint {
 		
 		if (Bluetooth.getFriendlyName().equals("Crta")) {
 			
-			int robotPower = 40;
+			int robotPower = 60;
 			
 			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
 			lineFollower.actAsReceiver();
@@ -24,16 +24,13 @@ public class StartPoint {
 			//Button.waitForAnyPress();
 			lineFollower.followLine(); // tudi poslje signal na koncu
 			//driveStraight(70, 200); // verjetno se bomo morali bolj priblizati zidu
-			lineFollower.rotateInPlace(100, 810); // TODO: tweak this
-			lineFollower.driveStraight(70, 1000);
-			lineFollower.rotateInPlace(-100, 1620);
-			lineFollower.follow();
+			//lineFollower.follow();
 			
 		}
 		
 		else if (Bluetooth.getFriendlyName().equals("Zid")) {
 			
-			int robotPower = 40;
+			int robotPower = 80;
 			WallRobot wallFollower = new WallRobot(MotorPort.A, MotorPort.B, SensorPort.S1, SensorPort.S4, robotPower);
 			LCD.drawString(Bluetooth.getFriendlyName() + ". Clk to connect.", 0, 0);
 			Button.waitForAnyPress(); // pocakaj s pritiskom gumba, dokler drug robot ni odprt za connection
@@ -41,7 +38,6 @@ public class StartPoint {
 			wallFollower.connectToRemote("Crta");
 			LCD.clear();LCD.drawString("WAITING FOLLOW", 0, 0);
 			wallFollower.follow();
-			wallFollower.driveStraightUntilWall();
 			wallFollower.followWall();
 		}
 	}
