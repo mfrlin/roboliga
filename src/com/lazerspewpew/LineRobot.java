@@ -206,7 +206,7 @@ public class LineRobot extends Robot {
 			if(sum > thresh){
 				LCD.drawString("SLOW", 0, 4);
 //				Sound.twoBeeps();
-				reducedPower -= (reducedPower - 0.5) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
+				reducedPower -= (reducedPower - 0.6) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
 			}else{
 				reducedPower += (1 - reducedPower) * acceleration;
 			}
