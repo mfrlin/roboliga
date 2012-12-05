@@ -38,8 +38,6 @@ public class WallRobot extends Robot {
 	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower) {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort);
-		//leftReguMotor = new NXTRegulatedMotor(leftMotorPort);
-		//rightReguMotor = new NXTRegulatedMotor(rightMotorPort); 
 		this.wantedWallDistance = (int) (23 * 1.1); // na kaki razdalji se naj pelje desno
 		this.wallFrontDistance = 26; // na kaki razdalji naj zaène upoštevati sprednji senzor
 		
@@ -170,8 +168,8 @@ public class WallRobot extends Robot {
 		LCD.clear();LCD.drawString("Press to follow", 0, 0);
 		Button.waitForAnyPress();
 		LCD.clear();
-		double tachoAdjustCoef = 1;
-		double paramAdjustCoef = 0.5;
+		double tachoAdjustCoef =5;
+		double paramAdjustCoef = 1;
 		int leftDifference = 0;
 		int rightDifference = 0;
 		
@@ -197,18 +195,24 @@ public class WallRobot extends Robot {
 					rightGlobalTacho += parameters[1];
 					int paramDifference = (int)((parameters[0] - parameters[1])/paramAdjustCoef);
 					//int paramDifference = 0;
-					int leftPower = parameters[2]+leftDifference-paramDifference;
+					int leftPower = parameters[2]+leftDifference;
 					leftMotor.setPower(leftPower);
-					int rightPower = parameters[3]+rightDifference+paramDifference;
+					if (paramDifference > 0) {
+						rightGlobalTacho += paramDifference;
+					}
+					else {
+						leftGlobalTacho -= paramDifference;
+					}
+					int rightPower = parameters[3]+rightDifference;
 					rightMotor.setPower(rightPower);
 					
 					
 					while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
 						if (leftMotor.getTachoCount() > leftGlobalTacho) {
-							leftMotor.setPower((int)(leftPower/2));
+							leftMotor.setPower((int)(leftPower/1.5));
 						}
 						if (rightMotor.getTachoCount() > rightGlobalTacho) {
-							rightMotor.setPower((int)(rightPower/2));
+							rightMotor.setPower((int)(rightPower/1.5));
 						}
 					}
 					leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();

@@ -16,7 +16,7 @@ public class StartPoint {
 		
 		if (Bluetooth.getFriendlyName().equals("Crta")) {
 			
-			int robotPower = 60;
+			int robotPower = 50;
 			
 			LineRobot lineFollower = new LineRobot(MotorPort.A, MotorPort.B, SensorPort.S3, SensorPort.S2, robotPower);
 			lineFollower.actAsReceiver();
