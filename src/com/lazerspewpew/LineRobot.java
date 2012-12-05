@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Queue;
 import lejos.nxt.Button;
 import lejos.nxt.LCD;
 import lejos.nxt.MotorPort;
@@ -22,9 +23,20 @@ public class LineRobot extends Robot {
 	private int[] steeringHistory = new int[10]; // Steivlo elementov naj bo SODO. Array za shranjevanje getSensorReadings().;
 	private int steeringHistoryCounter = 0; // index zadnjega shranjenega elementa v sensorDifferences
 	private double reducedPower = 1;
-//	private boolean lineEnd = false;
-	//private long lastSend;
-	//private long sendInterval = 500;
+	private boolean lineEnd = false;
+	private long lastSend;
+	private long sendInterval = 50;
+	private int powerSampleCounter = 0;
+	private int leftPowerSamples = 0;
+	private int rightPowerSamples = 0;
+	
+	protected Queue<int[]> followData = new Queue<int[]>();
+	protected int expectedCounter = 0;
+	protected int leftGlobalTacho = 0;
+	protected int rightGlobalTacho = 0;
+	protected int leftDifferenceTacho = 0;
+	protected int rightDifferenceTacho = 0;
+	
 	
 	private long lastTimeLineEnd = System.currentTimeMillis(); // za omejevanje stevila podatkov v sensorMinValuesHistory
 	private long lastTimeSlowDown = System.currentTimeMillis(); // za omejevanje stevila podatkov v steeringHistory
@@ -112,14 +124,15 @@ public class LineRobot extends Robot {
 		int leftReading = leftSensor.getValue();
 		int rightReading = rightSensor.getValue();
 		
-		detectLineEnd(leftReading, rightReading);
+		lineEnd = detectLineEnd(leftReading, rightReading);
+			
 		
 		slowDownOnCurves(leftReading, rightReading);
 		
 		return rightReading - leftReading;
 	}
 	
-	private void detectLineEnd(int leftReading, int rightReading) {
+	private boolean detectLineEnd(int leftReading, int rightReading) {
 		int sampleDelta = (int)(1000 / sensorMinValuesHistory.length); // only accept data every sampleDelta ms. Will stop in 1 second.
 		sampleDelta = (int)(sampleDelta / (3.0 * maxPower / 50.0)); // 2.0 is the scaling factor
 		int thresh = sensorMinValuesHistory.length * 70;
@@ -135,15 +148,18 @@ public class LineRobot extends Robot {
 			
 			if(sum > thresh){
 				LCD.drawString("STOP?", 0, 3);
-				Sound.beep();
+				//Sound.beep();
 				stopAndSendStartSignal();
+				return true;
 			}else{
 				leftMotor.forward();
 				rightMotor.forward();
 				leftMotor.setPower(Math.max(leftMotor.getPower(), 20));
 				rightMotor.setPower(Math.max(rightMotor.getPower(), 20));
+				return false;
 			}
 		}
+		return false;
 	}
 	
 	public void rotateInPlace(int power, int time){
@@ -177,10 +193,10 @@ public class LineRobot extends Robot {
 			return;
 		}
 
-		leftMotor.stop();
-		rightMotor.stop();
-		Sound.twoBeeps();
-		sendInt(88); // FIXME: uncomment
+		leftMotor.setPower(0);
+		rightMotor.setPower(0); //TODO: tweak this
+		//Sound.twoBeeps();
+		sendInt(-666); // FIXME: uncomment
 	}
 
 	private void slowDownOnCurves(int leftReading, int rightReading) {
@@ -199,14 +215,14 @@ public class LineRobot extends Robot {
 			steeringHistory[getSteeringHistoryCounter()] = rightReading-leftReading;
 			
 			int sum = absoluteSum(steeringHistory);
-			LCD.clear();
-			LCD.drawInt(sum, 0, 6);
-			LCD.drawInt(thresh, 0, 7);
+			//LCD.clear();
+			//LCD.drawInt(sum, 0, 6);
+			//LCD.drawInt(thresh, 0, 7);
 			
 			if(sum > thresh){
-				LCD.drawString("SLOW", 0, 4);
+				//LCD.drawString("SLOW", 0, 4);
 //				Sound.twoBeeps();
-				reducedPower -= (reducedPower - 0.5) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
+				reducedPower -= (reducedPower - 1) * decceleration; // 0.5 mean a reduction of up to 50% in speed.
 			}else{
 				reducedPower += (1 - reducedPower) * acceleration;
 			}
@@ -236,14 +252,66 @@ public class LineRobot extends Robot {
 
 	public void followLine() {
 		int read, steer;
-		while(true) {
+		int counter = 0;
+		long timeChange, now;
+		leftMotor.resetTachoCount();
+		rightMotor.resetTachoCount();
+		while(!lineEnd) {
 			read = getSensorReadings();  /* Skaliranje vrednosti raje opravi v NormalizedLightSensor */
 			steer = (int)myPID.compute(read, 0);
 			steer(steer);
+			now = System.currentTimeMillis();
+			timeChange = now - lastSend;
+			leftPowerSamples += leftMotor.getPower();
+			rightPowerSamples += rightMotor.getPower();
+			powerSampleCounter++;
+			if (timeChange >= sendInterval) {
+				sendTachoCounts(counter);
+				counter++;
+				
+				lastSend = now;
+			}
 		}
 	}
 	
+	public boolean sendTachoCounts(int counter) {
+		int leftWheel = leftMotor.getTachoCount();
+		leftMotor.resetTachoCount();
+		int rightWheel = rightMotor.getTachoCount();
+		rightMotor.resetTachoCount();
+		int leftPower = leftPowerSamples/powerSampleCounter;
+		int rightPower = rightPowerSamples/powerSampleCounter;
+
+		try {
+			outputStream.writeInt(leftWheel);
+			outputStream.writeInt(rightWheel);
+			outputStream.writeInt(leftPower);
+			outputStream.writeInt(rightPower);
+			outputStream.writeInt(counter);
+			
+			outputStream.flush();
+			powerSampleCounter = 0;
+			leftPowerSamples = 0;
+			rightPowerSamples = 0;
+			
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
 	
+	public boolean sendReadings(int read) {
+		try {
+			outputStream.writeInt(read);
+			outputStream.flush();
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
 	private void flushAndClose(DataOutputStream dos) {
 		try {
 			dos.flush();
@@ -252,7 +320,7 @@ public class LineRobot extends Robot {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private DataOutputStream createDataOutputStream(String name) {
 		DataOutputStream dos = null;
 		try {
@@ -262,7 +330,7 @@ public class LineRobot extends Robot {
 		}
 		return dos;
 	}
-
+	
 	public int sum(int[] arr){
 		int temp = 0;
 		for(int i=0;i<arr.length;i++){
@@ -270,6 +338,7 @@ public class LineRobot extends Robot {
 		}
 		return temp;
 	}
+	
 	public void writeIntAsString(DataOutputStream dos, int difference){
 		try {
 			String a = new Integer(difference).toString();
@@ -277,6 +346,110 @@ public class LineRobot extends Robot {
 
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	public void driveStraight(int power, int time) {
+		leftMotor.setPower(power);
+		rightMotor.setPower(power);
+		Delay.msDelay(time);
+		leftMotor.setPower(0);
+		rightMotor.setPower(0);
+	}
+	
+	public void getTachoCounts() {
+		int[] temp = new int[4];
+		try {
+			if (inputStream.available() != 0) {
+				int first = inputStream.readInt();
+				if (first == -666) {
+					temp[0] = first;
+					temp[1] = first;
+					temp[2] = first;
+					temp[3] = first;
+				}
+				else {
+					temp[0] = first;
+					temp[1] = inputStream.readInt();
+					temp[2] = inputStream.readInt();
+					temp[3] = inputStream.readInt();
+				}
+				int getCounter = inputStream.readInt();
+				/*if (getCounter != expectedCounter) {
+					Button.waitForAnyPress();
+				}
+				else {
+					expectedCounter++;
+				}*/
+				synchronized(followData) { followData.push(temp); }
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private class Communicate implements Runnable {
+		public void run() {
+			
+			while (true) {
+				getTachoCounts();
+				
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void follow() {
+		Thread communications = new Thread(new Communicate());
+		communications.start();
+		Delay.msDelay(5000); //Delay za start sledenja po zamenjavi
+		double tachoAdjustCoef = 0.5;
+		int leftDifference = 0;
+		int rightDifference = 0;
+		
+		while (true) {
+			int[] parameters = null;
+			synchronized(followData) {
+				if (!followData.empty()) {
+					parameters = (int[]) followData.pop(); 
+				}
+			}
+			
+			if (parameters != null) {
+				if (parameters[0] == -666) {
+					leftMotor.setPower(0);
+					rightMotor.setPower(0);
+					break;
+				}
+				else {
+					leftGlobalTacho += parameters[0];
+					rightGlobalTacho += parameters[1];
+					int leftPower = parameters[2]+leftDifference;
+					leftMotor.setPower(leftPower);
+					int rightPower = parameters[3]+rightDifference;
+					rightMotor.setPower(rightPower);
+					while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
+						if (leftMotor.getTachoCount() > leftGlobalTacho) {
+							leftMotor.setPower((int)(leftPower/1.5));
+						}
+						if (rightMotor.getTachoCount() > rightGlobalTacho) {
+							rightMotor.setPower((int)(rightPower/1.5));
+						}
+					}
+					leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();
+					rightDifferenceTacho = rightGlobalTacho - rightMotor.getTachoCount();
+					leftDifference = (int)(leftDifferenceTacho / tachoAdjustCoef);
+					rightDifference = (int)(rightDifferenceTacho / tachoAdjustCoef);
+					LCD.drawInt(leftDifference,10,0,1);
+					LCD.drawInt(rightDifference,10,0,3);
+					//if (leftDifference < 0) leftDifference = 0;
+					//if (rightDifference < 0) rightDifference = 0;
+				}
+			}
 		}
 	}
 
