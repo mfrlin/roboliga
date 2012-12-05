@@ -23,8 +23,12 @@ public class StartPoint {
 			LCD.clear();LCD.drawString("Click to START.", 0, 0);
 			//Button.waitForAnyPress();
 			lineFollower.followLine(); // tudi poslje signal na koncu
-			//driveStraight(70, 200); // verjetno se bomo morali bolj priblizati zidu
-			//lineFollower.follow();
+			lineFollower.rotateInPlace(100, 800);
+			lineFollower.driveStraight(70, 1300); // verjetno se bomo morali bolj priblizati zidu
+			lineFollower.rotateInPlace(100, 1600);
+			Delay.msDelay(6000);
+			lineFollower.driveStraight(70, 2600);
+			lineFollower.follow();
 			
 		}
 		
@@ -39,8 +43,11 @@ public class StartPoint {
 			wallFollower.connectToRemote("Crta");
 			LCD.clear();LCD.drawString("WAITING FOLLOW", 0, 0);
 			wallFollower.follow();
+			wallFollower.driveStraightUntilWall();
 			wallFollower.followWall();
 		}
 	}
+
+
 }
 

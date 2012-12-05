@@ -39,7 +39,7 @@ public class WallRobot extends Robot {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort);
 		this.wantedWallDistance = (int) (23 * 1.1); // na kaki razdalji se naj pelje desno
-		this.wallFrontDistance = 26; // na kaki razdalji naj zaène upoštevati sprednji senzor
+		this.wallFrontDistance = 27; // na kaki razdalji naj zaène upoštevati sprednji senzor
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
 		usRightSensor = new UltrasonicSensor(rightSensorPort);
@@ -92,7 +92,7 @@ public class WallRobot extends Robot {
 		} while( usFrontSensor.getDistance() < 0.9 * wallFrontDistance);// || usRightSensor.getDistance() < wantedWallDistance );
 		
 		/* Zaradi teh delajev vozi bolj naravno. */
-		Delay.msDelay(50);
+		Delay.msDelay(150);
 		steer(0);
 		Delay.msDelay(100);
 		
