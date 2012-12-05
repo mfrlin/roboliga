@@ -27,15 +27,17 @@ public class WallRobot extends Robot {
 	protected int rightGlobalTacho = 0;
 	protected int leftDifferenceTacho = 0;
 	protected int rightDifferenceTacho = 0;
+	protected boolean firstFollower;
 	
 	
-	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower) {
+	public WallRobot(MotorPort leftMotorPort, MotorPort rightMotorPort, SensorPort frontSensorPort, SensorPort rightSensorPort, int maxPower, boolean firstFollower) {
 		leftMotor = new NXTMotor(leftMotorPort);
 		rightMotor = new NXTMotor(rightMotorPort);
 		//leftReguMotor = new NXTRegulatedMotor(leftMotorPort);
 		//rightReguMotor = new NXTRegulatedMotor(rightMotorPort); 
 		this.wantedWallDistance = (int) (23 * 1.1); // na kaki razdalji se naj pelje desno
 		this.wallFrontDistance = 26; // na kaki razdalji naj zaène upoštevati sprednji senzor
+		this.firstFollower = firstFollower;
 		
 		usFrontSensor = new UltrasonicSensor(frontSensorPort);
 		usRightSensor = new UltrasonicSensor(rightSensorPort);
@@ -139,7 +141,10 @@ public class WallRobot extends Robot {
 		Thread communications = new Thread(new Communicate());
 		communications.start();
 		LCD.clear();LCD.drawString("Press to follow", 0, 0);
-		Button.waitForAnyPress();
+		if (firstFollower) {
+			Button.waitForAnyPress();
+		}
+		
 		LCD.clear();
 		double tachoAdjustCoef = 0.5;
 		int leftDifference = 0;
@@ -154,28 +159,35 @@ public class WallRobot extends Robot {
 			}
 			
 			if (parameters != null) {
-				leftGlobalTacho += parameters[0];
-				rightGlobalTacho += parameters[1];
-				int leftPower = parameters[2]+leftDifference;
-				leftMotor.setPower(leftPower);
-				int rightPower = parameters[3]+rightDifference;
-				rightMotor.setPower(rightPower);
-				while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
-					if (leftMotor.getTachoCount() > leftGlobalTacho) {
-						leftMotor.setPower((int)(leftPower/1.5));
-					}
-					if (rightMotor.getTachoCount() > rightGlobalTacho) {
-						rightMotor.setPower((int)(rightPower/1.5));
-					}
+				if (parameters[0] == -666) {
+					leftMotor.setPower(0);
+					rightMotor.setPower(0);
+					break;
 				}
-				leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();
-				rightDifferenceTacho = rightGlobalTacho - rightMotor.getTachoCount();
-				leftDifference = (int)(leftDifferenceTacho / tachoAdjustCoef);
-				rightDifference = (int)(rightDifferenceTacho / tachoAdjustCoef);
-				LCD.drawInt(leftDifference,10,0,1);
-				LCD.drawInt(rightDifference,10,0,3);
-				//if (leftDifference < 0) leftDifference = 0;
-				//if (rightDifference < 0) rightDifference = 0;
+				else {
+					leftGlobalTacho += parameters[0];
+					rightGlobalTacho += parameters[1];
+					int leftPower = parameters[2]+leftDifference;
+					leftMotor.setPower(leftPower);
+					int rightPower = parameters[3]+rightDifference;
+					rightMotor.setPower(rightPower);
+					while(leftMotor.getTachoCount() < leftGlobalTacho && rightMotor.getTachoCount() < rightGlobalTacho ) {
+						if (leftMotor.getTachoCount() > leftGlobalTacho) {
+							leftMotor.setPower((int)(leftPower/1.5));
+						}
+						if (rightMotor.getTachoCount() > rightGlobalTacho) {
+							rightMotor.setPower((int)(rightPower/1.5));
+						}
+					}
+					leftDifferenceTacho = leftGlobalTacho - leftMotor.getTachoCount();
+					rightDifferenceTacho = rightGlobalTacho - rightMotor.getTachoCount();
+					leftDifference = (int)(leftDifferenceTacho / tachoAdjustCoef);
+					rightDifference = (int)(rightDifferenceTacho / tachoAdjustCoef);
+					LCD.drawInt(leftDifference,10,0,1);
+					LCD.drawInt(rightDifference,10,0,3);
+					//if (leftDifference < 0) leftDifference = 0;
+					//if (rightDifference < 0) rightDifference = 0;
+				}
 			}
 		}
 		
@@ -209,17 +221,26 @@ public class WallRobot extends Robot {
 		int[] temp = new int[4];
 		try {
 			if (inputStream.available() != 0) {
-				temp[0] = inputStream.readInt();
-				temp[1] = inputStream.readInt();
-				temp[2] = inputStream.readInt();
-				temp[3] = inputStream.readInt();
+				int first = inputStream.readInt();
+				if (first == -666) {
+					temp[0] = first;
+					temp[1] = first;
+					temp[2] = first;
+					temp[3] = first;
+				}
+				else {
+					temp[0] = first;
+					temp[1] = inputStream.readInt();
+					temp[2] = inputStream.readInt();
+					temp[3] = inputStream.readInt();
+				}
 				int getCounter = inputStream.readInt();
-				if (getCounter != expectedCounter) {
+				/*if (getCounter != expectedCounter) {
 					Button.waitForAnyPress();
 				}
 				else {
 					expectedCounter++;
-				}
+				}*/
 				synchronized(followData) { followData.push(temp); }
 			}
 		} catch (IOException e) {
@@ -241,6 +262,28 @@ public class WallRobot extends Robot {
 				}
 			}
 		}
+	}
+
+	public void driveStraightUntilWall() {
+		leftMotor.setPower(50);
+		rightMotor.setPower(50);
+		while (true) {
+			int frontDistance = usFrontSensor.getDistance();
+			if (frontDistance < wallFrontDistance) {
+				rotateInPlace(-100, 810);
+			}
+		}
+		
+	}
+	
+	public void rotateInPlace(int power, int time){
+		rightMotor.setPower(0);
+		leftMotor.setPower(0);	
+		leftMotor.setPower(-power/2);
+		rightMotor.setPower(power/2);
+		Delay.msDelay(time);
+		rightMotor.setPower(0);
+		leftMotor.setPower(0);
 	}
 	
 //	public void followWall() {
