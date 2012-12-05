@@ -168,7 +168,7 @@ public class WallRobot extends Robot {
 		LCD.clear();LCD.drawString("Press to follow", 0, 0);
 		Button.waitForAnyPress();
 		LCD.clear();
-		double tachoAdjustCoef =5;
+		double tachoAdjustCoef =3;
 		double paramAdjustCoef = 1;
 		int leftDifference = 0;
 		int rightDifference = 0;
@@ -193,8 +193,8 @@ public class WallRobot extends Robot {
 				else {
 					leftGlobalTacho += parameters[0];
 					rightGlobalTacho += parameters[1];
-					int paramDifference = (int)((parameters[0] - parameters[1])/paramAdjustCoef);
-					//int paramDifference = 0;
+					//int paramDifference = (int)((parameters[0] - parameters[1])/paramAdjustCoef);
+					int paramDifference = 0;
 					int leftPower = parameters[2]+leftDifference;
 					leftMotor.setPower(leftPower);
 					if (paramDifference > 0) {
