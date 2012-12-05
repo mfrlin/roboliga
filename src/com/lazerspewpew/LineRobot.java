@@ -25,7 +25,7 @@ public class LineRobot extends Robot {
 	private double reducedPower = 1;
 	private boolean lineEnd = false;
 	private long lastSend;
-	private long sendInterval = 100;
+	private long sendInterval = 50;
 	private int powerSampleCounter = 0;
 	private int leftPowerSamples = 0;
 	private int rightPowerSamples = 0;
